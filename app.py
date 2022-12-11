@@ -20,6 +20,7 @@ import torch
 import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
 from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2FeatureExtractor, LayoutLMv2TokenizerFast
+from torchvision.datasets.utils import download_file_from_google_drive
 
 # 2022-12-01 add by @Jiaen LIU for LayoutLMv2
 # Inspired by https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie/tree/main
@@ -155,14 +156,27 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
 
 
 
+# Download trained models
+if not os.path.exists(os.path.join(os.getcwd(), "model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")):
+    # https://drive.google.com/file/d/17FwgKDD3pvcYjWSRs_GGOgG8NpTydLlr/view?usp=share_link
+    print("Downloading Deeplabv3 with MobilenetV3-Large backbone...")
+    download_file_from_google_drive(file_id=r"17FwgKDD3pvcYjWSRs_GGOgG8NpTydLlr", root=os.getcwd(), filename=r"model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")
+
+if not os.path.exists(os.path.join(os.getcwd(), "model_r50_iou_mix_2C020.pth")):
+    print("Downloading Deeplabv3 with ResNet-50 backbone...")
+    download_file_from_google_drive(file_id=r"1DEl6qLckFChSDlT_oLUbO2JpN776Qx-g", root=os.getcwd(), filename=r"model_r50_iou_mix_2C020.pth")
+
+
+
 @st.cache(allow_output_mutation=True)
+# add function to load model from google drive
 def load_model(num_classes=2, model_name="mbv3", device=torch.device("cpu")):
     if model_name == "mbv3":
         model = deeplabv3_mobilenet_v3_large(num_classes=num_classes, aux_loss=True)
-        checkpoint_path = os.path.join(os.getcwd(), "models/model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")
+        checkpoint_path = os.path.join(os.getcwd(), "model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")
     else:
         model = deeplabv3_resnet50(num_classes=num_classes, aux_loss=True)
-        checkpoint_path = os.path.join(os.getcwd(), "models/model_r50_iou_mix_2C020.pth")
+        checkpoint_path = os.path.join(os.getcwd(), "model_r50_iou_mix_2C020.pth")
 
     model.to(device)
     checkpoints = torch.load(checkpoint_path, map_location=device)
