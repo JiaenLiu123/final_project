@@ -1,7 +1,9 @@
 import os
+import uuid
 import gc
 import io
 import cv2
+import json
 import base64
 import pathlib
 import numpy as np
@@ -488,7 +490,6 @@ DOWNLOADS_PATH = STREAMLIT_STATIC_PATH / "downloads"
 if not DOWNLOADS_PATH.is_dir():
     DOWNLOADS_PATH.mkdir()
 
-
 IMAGE_SIZE = 384
 preprocess_transforms = image_preprocess_transforms()
 image = None
@@ -532,16 +533,8 @@ if uploaded_file is not None:
     if final is not None:
         with col3:
             # OCR the document
-            # start_time = time.time()
-            result,scanned_img = ocr_document(final)
-            # end_time = time.time()
-            # print("OCR Time: ", end_time - start_time)
-
-            # st.image(scanned_img, use_column_width=True)
-            # st.title("OCR Output")
-            # st.write(result)
+            scanned_img = image_resize(final, width=600)
             scanned_img = Image.fromarray(final[:, :, ::-1])
-            # image, text, date,total, json_df
             annotated_img, text, date, total,json_df = process_image(scanned_img, feature_extractor,tokenizer, layoutLMv2, id2label, label2color)
             st.image(annotated_img, use_column_width=True)
             st.title("LayoutLMv2 Output")
@@ -550,10 +543,31 @@ if uploaded_file is not None:
             st.write("Date: ", date)
             st.write("Total: ", total)
             st.write(text)
-            # st.write(predictions)
-            # st.write(boxes)
-            # st.write(pred)
-            # (width, height, )
             # Display link.
             result = Image.fromarray(final[:, :, ::-1])
             st.markdown(get_image_download_link(result, "output.png", "Download " + "Output"), unsafe_allow_html=True)
+
+
+# if not os.path.exists(os.path.join(os.getcwd(), "model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")):
+
+# Create a output_img directory if it doesn't exist
+if not os.path.exists(os.path.join(os.getcwd(), "output_img")):
+    os.makedirs(os.path.join(os.getcwd(), "output_img"))
+
+# save the output image and regex output to the output_img directory
+if result is not None and json_df is not None:
+    st.write("If the result is correct, click the button to save the output image and regex output")
+    if st.button("Save Output"):
+        name = str(uuid.uuid4())
+        # Save the output image to the output_img directory
+        img_str = name + ".png"
+        result.save(os.path.join(os.getcwd(), "output_img") +  "/" + img_str, format="PNG")
+        st.write("Output image saved to output_img directory")
+        # Save the regex output to a text file
+        text_str = name + ".txt"
+        with open(os.path.join(os.getcwd(), "output_img") +  "/" + text_str , "w") as f:
+            # f.write(json.dumps(json_df, indent=4))
+            f.write("Date: " + date[1].strftime("%d/%m/%Y") + "\n")
+            f.write("Total: " + str(total[1]) + "")
+        st.write("Regex output saved to output_img directory")
+    # result.save(os.path.join(os.getcwd(), "output_img") / "output.png", format="PNG")
