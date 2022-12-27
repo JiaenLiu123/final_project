@@ -30,7 +30,7 @@ from torchvision.datasets.utils import download_file_from_google_drive
 # Load LayoutLMv2 model
 @st.cache(allow_output_mutation=True)
 def get_layoutlmv2(ocr_lang = "fra"):
-    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang)
+    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
     tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
     model = LayoutLMv2ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv2-finetuned-sroie")
@@ -97,7 +97,7 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     # print(encoding_feature_extractor.words)
     # TODO: apply the regex to the words
     words, boxes = encoding_feature_extractor.words[0], encoding_feature_extractor.boxes[0]
-    print(words)
+    # print(words)
     text = " ".join(words)
     encoding = tokenizer(words, boxes=boxes, return_offsets_mapping=True, return_tensors="pt", truncation=True)
     # encoding = processor(image, truncation=True, return_offsets_mapping=True, return_tensors="pt")
@@ -135,11 +135,6 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
 
             json_df.append(json_dict)
 
-    print(true_predictions[0])
-    print(true_boxes[0])
-
-    # draw predictions over the image and get the text of the predictions
-    # text = []
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default()
     # print(zip(true_predictions, true_boxes))
@@ -276,24 +271,24 @@ def order_points(pts):
     pts = np.array(pts)
 
     # Sort by Y position (to get top-down)
-    pts = pts[np.argsort(pts[:, 1])]
+    # pts = pts[np.argsort(pts[:, 1])]
 
-    rect[0] = pts[0] if pts[0][0] < pts[1][0] else pts[1]
-    rect[1] = pts[1] if pts[0][0] < pts[1][0] else pts[0]
-    rect[2] = pts[2] if pts[2][0] > pts[3][0] else pts[3]
-    rect[3] = pts[3] if pts[2][0] > pts[3][0] else pts[2]
-    # s = pts.sum(axis=1)
-    # # Top-left point will have the smallest sum.
-    # rect[0] = pts[np.argmin(s)]
-    # # Bottom-right point will have the largest sum.
-    # rect[2] = pts[np.argmax(s)]
+    # rect[0] = pts[0] if pts[0][0] < pts[1][0] else pts[1]
+    # rect[1] = pts[1] if pts[0][0] < pts[1][0] else pts[0]
+    # rect[2] = pts[2] if pts[2][0] > pts[3][0] else pts[3]
+    # rect[3] = pts[3] if pts[2][0] > pts[3][0] else pts[2]
+    s = pts.sum(axis=1)
+    # Top-left point will have the smallest sum.
+    rect[0] = pts[np.argmin(s)]
+    # Bottom-right point will have the largest sum.
+    rect[2] = pts[np.argmax(s)]
 
-    # diff = np.diff(pts, axis=1)
-    # # Top-right point will have the smallest difference.
-    # rect[1] = pts[np.argmin(diff)]
-    # # Bottom-left will have the largest difference.
-    # rect[3] = pts[np.argmax(diff)]
-    # # return the ordered coordinates
+    diff = np.diff(pts, axis=1)
+    # Top-right point will have the smallest difference.
+    rect[1] = pts[np.argmin(diff)]
+    # Bottom-left will have the largest difference.
+    rect[3] = pts[np.argmax(diff)]
+    # return the ordered coordinates
     return rect.astype("int").tolist()
 
 
@@ -483,6 +478,24 @@ def ocr_document(image, lang="fra", width=600):
 
     return words,image
 
+def remove_shadows(image):
+    # convert the image to grayscale and blur it
+    rgb_planes = cv2.split(image)
+    # result_planes = []
+    result_norm_planes = []
+    for plane in rgb_planes:
+        dilated_img = cv2.dilate(plane, np.ones((7,7), np.uint8))
+        bg_img = cv2.medianBlur(dilated_img, 21)
+        diff_img = 255 - cv2.absdiff(plane, bg_img)
+        norm_img = cv2.normalize(diff_img,None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        # result_planes.append(diff_img)
+        result_norm_planes.append(norm_img)
+        
+    # result = cv2.merge(result_planes)
+    result_norm = cv2.merge(result_norm_planes)
+    return result_norm
+
+# TODO: Redesign the UI of the application.
 # We create a downloads directory within the streamlit static asset directory
 # and we write output files to it
 STREAMLIT_STATIC_PATH = pathlib.Path(st.__path__[0]) / "static"
@@ -533,15 +546,32 @@ if uploaded_file is not None:
     if final is not None:
         with col3:
             # OCR the document
+            print(type(final))
             scanned_img = image_resize(final, width=600)
-            scanned_img = Image.fromarray(final[:, :, ::-1])
+            # scanned_img = Image.fromarray(final[:, :, ::-1])
+            print(type(scanned_img))
+            scanned_img = remove_shadows(scanned_img)
+            scanned_img = Image.fromarray(scanned_img[:, :, ::-1])
+            # text,scanned_img = ocr_document(scanned_img)
+            # text = pytesseract.image_to_string(scanned_img, lang="fra")
+            # st.title("ORG OCR Output")
+            # st.write(text)
+            # st.title("Scanned Image")
+            st.image(scanned_img, use_column_width=True)
+
             annotated_img, text, date, total,json_df = process_image(scanned_img, feature_extractor,tokenizer, layoutLMv2, id2label, label2color)
             st.image(annotated_img, use_column_width=True)
             st.title("LayoutLMv2 Output")
-            st.write(json_df)
+            for i in json_df:
+                if "TOTAL" in i['LABEL']:
+                    st.write("Total: ", i['TEXT'])
+                elif "DATE" in i['LABEL']:
+                    st.write("Date: ", i['TEXT'])
+            # st.write(json_df)
             st.title("Regex Output")
-            st.write("Date: ", date)
-            st.write("Total: ", total)
+            st.write("Date: ", date[1].strftime("%d/%m/%Y %H:%M:%S"), f"({round(date[0] * 100)}% sure)")
+            st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
+            st.title("OCR Output")
             st.write(text)
             # Display link.
             result = Image.fromarray(final[:, :, ::-1])
@@ -567,7 +597,7 @@ if result is not None and json_df is not None:
         text_str = name + ".txt"
         with open(os.path.join(os.getcwd(), "output_img") +  "/" + text_str , "w") as f:
             # f.write(json.dumps(json_df, indent=4))
-            f.write("Date: " + date[1].strftime("%d/%m/%Y") + "\n")
-            f.write("Total: " + str(total[1]) + "")
+            f.write("Date , " + date[1].strftime("%d/%m/%Y") + "\n")
+            f.write("Total , " + str(total[1]) + "")
         st.write("Regex output saved to output_img directory")
     # result.save(os.path.join(os.getcwd(), "output_img") / "output.png", format="PNG")

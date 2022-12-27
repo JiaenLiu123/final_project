@@ -9,8 +9,8 @@ GOOD_TIME_SEPS = [':', 'h', '']
 
 empty_sep = lambda name, min_sep=0: f'(?P<{name}>[^\\n\d]{{{min_sep},3}})'
 
-day = '(?P<day>[1-9]|0[1-9]|[12]\d|3[01])'
-month = '(?P<month>[1-9]|0[1-9]|1[012])'
+day = '(?P<day>[12]\d|3[01]|0[1-9]|[1-9])'
+month = '(?P<month>0[1-9]|1[012]|[1-9])'
 
 def current_year_regex():
     current_year = datetime.now().year
@@ -40,8 +40,8 @@ def monthShort(month):
     else:
         return f'(?:(?:{month[:3]}(?:{month[3]}(?:{month[4:]})?)?)\.?)'
 
-regex_date_prefix_time = f"(?P<time>{hour}{empty_sep('sep_hour')}{minute}({empty_sep('sep_minute')}{second})?{empty_sep('sep_time', 1)})?{day}{empty_sep('sep_day')}((?P<month_name>{'|'.join(list(map(monthShort, monthNamesFrNoAccent)) + list(specialMonths.keys()))})|{month}){empty_sep('sep_month')}({year})"
-regex_date_suffix_time = f"{day}{empty_sep('sep_day')}((?P<month_name>{'|'.join(list(map(monthShort, monthNamesFrNoAccent)) + list(specialMonths.keys()))})|{month}){empty_sep('sep_month')}({year})(?P<time>{empty_sep('sep_time', 1)}{hour}{empty_sep('sep_hour')}{minute}({empty_sep('sep_minute')}{second})?)?"
+regex_date_prefix_time = f"(?=(?P<time>{hour}{empty_sep('sep_hour')}{minute}({empty_sep('sep_minute')}{second})?{empty_sep('sep_time', 1)})?{day}{empty_sep('sep_day')}((?P<month_name>{'|'.join(list(map(monthShort, monthNamesFrNoAccent)) + list(specialMonths.keys()))})|{month}){empty_sep('sep_month')}({year}))"
+regex_date_suffix_time = f"(?=({day}{empty_sep('sep_day')}((?P<month_name>{'|'.join(list(map(monthShort, monthNamesFrNoAccent)) + list(specialMonths.keys()))})|{month}){empty_sep('sep_month')}({year})(?P<time>{empty_sep('sep_time', 1)}{hour}{empty_sep('sep_hour', 1)}{minute}({empty_sep('sep_minute')}{second})?)?))"
 
 def get_sep_score(sep1, sep2, good_seps):
     if sep1 in good_seps:
@@ -124,4 +124,4 @@ def parse_datetime(match):
     return datetime(year, month, day), is_day_one_digit, is_month_one_digit, is_month_name, False
 
 
-# print(regex_date_suffix_time)
+# print(regex_date_prefix_time)
