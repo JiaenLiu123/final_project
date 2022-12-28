@@ -3,6 +3,5 @@
 *__pycache__
 output_img
 failed_case
-testimage
 *.png
 test_scripts
