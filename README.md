@@ -10,6 +10,16 @@ This repository contains the final project for JiaenLiu's Bachelor's degree in C
 python -m pip install -r requirements.txt
 python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 python -m pip install torchvision tesseract
+
+# For Ubuntu to install Tesseract 5
+sudo apt update
+sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel
+sudo apt install -y tesseract-ocr
+sudo apt update 
+# Check the version is correct (Should be the latest version)
+tesseract --version
+# Be careful to make sure the fra.traineddata and eng.traineddata are correct
+
 ```
 
 
