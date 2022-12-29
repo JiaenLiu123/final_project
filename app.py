@@ -39,14 +39,10 @@ def get_layoutlmv2(ocr_lang = "fra"):
 # get the labels
 @st.cache(allow_output_mutation=True)
 def get_labels():
-    dataset = load_dataset("darentang/sroie", split="test")
-    # Image.open(dataset[50]["image_path"]).convert("RGB").save("example1.png")
-    # Image.open(dataset[14]["image_path"]).convert("RGB").save("example2.png")
-    # Image.open(dataset[20]["image_path"]).convert("RGB").save("example3.png")
+    # dataset = load_dataset("darentang/sroie", split="test")
     # define id2label, label2color
-    labels = dataset.features['ner_tags'].feature.names
+    labels = ['O', 'B-COMPANY', 'I-COMPANY', 'B-DATE', 'I-DATE', 'B-ADDRESS', 'I-ADDRESS', 'B-TOTAL', 'I-TOTAL']
     id2label = {v: k for v, k in enumerate(labels)}
-
     label2color = {'B-ADDRESS': 'blue',
     'B-COMPANY': 'green',
     'B-DATE': 'red',
