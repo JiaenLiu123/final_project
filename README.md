@@ -6,6 +6,8 @@ This repository contains the final project for JiaenLiu's Bachelor's degree in C
 
 ## Installation
 
+Idealy, you need a machine in Ubuntu 18.04 to run this project. You can also run it in Windows, but you need to install tesseract OCR engine manually. The following packages are required to run this project:
+
 ```bash
 python -m pip install -r requirements.txt
 python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
