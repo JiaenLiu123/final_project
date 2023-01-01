@@ -11,8 +11,8 @@ import torchvision.transforms as torchvision_T
 from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2FeatureExtractor, LayoutLMv2TokenizerFast
 
 
-def get_layoutlmv2(ocr_lang = "fra"):
-    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
+def get_layoutlmv2(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2"):
+    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
     tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
     model = LayoutLMv2ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv2-finetuned-sroie")
@@ -102,13 +102,13 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     true_predictions = true_predictions[1:-1]
     true_boxes = true_boxes[1:-1]
 
-    print(len(words),len(true_predictions),len(true_boxes))
+    # print(len(words),len(true_predictions),len(true_boxes))
     # if length of words, predictions and boxes are not equal, then save the image
     if len(words) != len(true_predictions) or len(words) != len(true_boxes):
         image.save("error_images/" +str(uuid.uuid4()) + ".jpg")
         print("There is an error when processing the image. Please check the error_images folder.")
-    print(words)
-    print(true_predictions)
+    # print(words)
+    # print(true_predictions)
 
 
     json_df = []
@@ -130,4 +130,4 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
 
     # get the text from the labeled box 
     # print(text)
-    return image, text, json_df,true_predictions
+    return image, text, json_df
