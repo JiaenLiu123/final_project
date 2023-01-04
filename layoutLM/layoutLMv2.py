@@ -8,14 +8,14 @@ import pandas as pd
 
 import torch
 import torchvision.transforms as torchvision_T
-from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2FeatureExtractor, LayoutLMv2TokenizerFast
+from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 
 
 def get_layoutlmv2(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2"):
-    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
-    tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
+    feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
+    tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base-uncased")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
-    model = LayoutLMv2ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv2-finetuned-sroie")
+    model = LayoutLMv3ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv3-finetuned-sroie")
     return tokenizer, feature_extractor, model
 
 def get_labels():
@@ -72,14 +72,13 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     encoding_feature_extractor = feature_extractor(image, return_tensors="pt")
     # print(encoding_feature_extractor.keys())
     # print(encoding_feature_extractor.words)
-    # TODO: apply the regex to the words
     words, boxes = encoding_feature_extractor.words[0], encoding_feature_extractor.boxes[0]
     # print(words)
     text = " ".join(words)
     encoding = tokenizer(words, boxes=boxes, return_offsets_mapping=True, return_tensors="pt", truncation=True)
     # encoding = processor(image, truncation=True, return_offsets_mapping=True, return_tensors="pt")
     offset_mapping = encoding.pop('offset_mapping')
-    encoding["image"] = encoding_feature_extractor.pixel_values
+    # encoding["image"] = encoding_feature_extractor.pixel_values
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     for k, v in encoding.items():

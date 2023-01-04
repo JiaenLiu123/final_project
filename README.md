@@ -30,7 +30,9 @@ tesseract --version
 
 ```
 
-
+## Need to be improved
+1. Correct the length of the prediction and the length of the words.  
+While I try to get the output of the model, it seems like the lenght of prediction and lenght of words are not the same. There are no good solutions on the Internet. For my personal experience, I found if OCR is more accurate, the probility of this problem will be lower. So I think the model can be improved by using a better OCR model.
 
 
 

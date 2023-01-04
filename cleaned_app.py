@@ -18,12 +18,12 @@ from dateutil.parser import parse
 from PIL import Image, ImageDraw, ImageFont
 from layoutLM.layoutLMv2 import  get_labels, process_image
 # from streamlit_drawable_canvas import st_canvas
-from regex.test_all_regex import test_regex
+from regex_script.test_all_regex import test_regex
 
 import torch
 import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
-from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2FeatureExtractor, LayoutLMv2TokenizerFast
+from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 from torchvision.datasets.utils import download_file_from_google_drive
 
 from Semantic_Segmentation.seg import scan, image_preprocess_transforms
@@ -35,10 +35,10 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # Define the function to load the models
 @st.cache(allow_output_mutation=True)
 def get_layoutlmv2(ocr_lang = "fra"):
-    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
-    tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
+    feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
+    tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
-    model = LayoutLMv2ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv2-finetuned-sroie")
+    model = LayoutLMv3ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv3-finetuned-sroie")
     return tokenizer, feature_extractor, model
 
 @st.cache(allow_output_mutation=True)
@@ -94,13 +94,13 @@ def main():
 
     method = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
     
-    col1, col2, col3 = st.beta_columns(3)
+    col1, col2, col3 = st.columns(3)
 
     if uploaded_file is not None:
         # Convert the file to an opencv image.
         file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
         image = cv2.imdecode(file_bytes, 1)
-        h, w = image.shape[:2]
+        # h, w = image.shape[:2]
 
         if method == "MobilenetV3-Large":
             model = load_model(model_name="mbv3")
@@ -115,14 +115,15 @@ def main():
             st.title("Scanned")
             final = scan(preprocess_transforms,image, model, IMAGE_SIZE)
             st.image(final, channels="BGR", use_column_width=True)
+            scanned_image = remove_shadows(final)
+            scanned_image = Image.fromarray(scanned_image)
+            scanned_image = resize_image(scanned_image, sizes[0], sizes[1])
+            st.title("Resized and Shadow Removed Image")
+            st.image(scanned_image, channels="BGR", use_column_width=True)
 
         if final is not None:
             with col3:
                 st.title("Annotated Image")
-                scanned_image = remove_shadows(final)
-                scanned_image = Image.fromarray(scanned_image)
-                scanned_image = resize_image(scanned_image, sizes[0], sizes[1])
-
                 annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
 
                 st.image(annotated_img, channels="BGR", use_column_width=True)
@@ -149,7 +150,7 @@ def main():
                     print(json_df[i]["TEXT"])
                 elif "total" in json_df[i]["LABEL"]:
                     total = re.sub(r'[^\d.]', '', json_df[i]["TEXT"])
-                    print(float(total))
+                    # print(float(total))
             
             st.write("Date: ", parse(" ".join(date), fuzzy=True).date().strftime("%d-%m-%Y"))
             st.write("Total: ", total)

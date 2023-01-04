@@ -1,7 +1,7 @@
 import re
 from unidecode import unidecode
-from regex.total_regex import naive_score_total, regex_suffix, regex_prefix
-from regex.date_regex import naive_score_date, regex_date_suffix_time, regex_date_prefix_time, parse_datetime
+from regex_script.total_regex import naive_score_total, regex_suffix, regex_prefix
+from regex_script.date_regex import naive_score_date, regex_date_suffix_time, regex_date_prefix_time, parse_datetime
 
 def test_regex(text: str, verbose=False):
     text = unidecode(text).lower()

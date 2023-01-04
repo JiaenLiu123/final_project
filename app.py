@@ -15,7 +15,7 @@ from skimage.filters import threshold_local
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-from regex.test_all_regex import test_regex
+from regex_script.test_all_regex import test_regex
 
 import time
 
