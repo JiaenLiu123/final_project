@@ -3,7 +3,6 @@ import uuid
 import gc
 import io
 import cv2
-import json
 import base64
 import pathlib
 import numpy as np
@@ -13,6 +12,8 @@ from datasets import load_dataset
 from streamlit_drawable_canvas import st_canvas
 import pytesseract
 from skimage.filters import threshold_local
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from regex.test_all_regex import test_regex
 
@@ -163,7 +164,7 @@ if not os.path.exists(os.path.join(os.getcwd(), "model_r50_iou_mix_2C020.pth")):
 
 @st.cache(allow_output_mutation=True)
 # add function to load model from google drive
-def load_model(num_classes=2, model_name="mbv3", device=torch.device("cpu")):
+def load_model(num_classes=2, model_name="mbv3", device= torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     if model_name == "mbv3":
         model = deeplabv3_mobilenet_v3_large(num_classes=num_classes, aux_loss=True)
         checkpoint_path = os.path.join(os.getcwd(), "model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")
@@ -176,40 +177,49 @@ def load_model(num_classes=2, model_name="mbv3", device=torch.device("cpu")):
     model.load_state_dict(checkpoints, strict=False)
     model.eval()
 
-    _ = model(torch.randn((1, 3, 384, 384)))
+    _ = model(torch.randn((1, 3, 384, 384)).to(device))
     return model
 
+def resize_image(image, size_x, size_y):
+    if image.size[0] > size_x and image.size[1] > size_y:
+        image = image.resize((size_x, size_y))
+    elif image.size[0] > size_x and image.size[1] < size_y:
+        image = image.resize(size_x)
+    elif image.size[1] > size_y and image.size[0] < size_x:
+        image = image.resize(size_y)
+    return image
 
-def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
-    # initialize the dimensions of the image to be resized and
-    # grab the image size
-    dim = None
-    (h, w) = image.shape[:2]
 
-    # if both the width and height are None, then return the
-    # original image
-    if width is None and height is None:
-        return image
+# def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
+#     # initialize the dimensions of the image to be resized and
+#     # grab the image size
+#     dim = None
+#     (h, w) = image.shape[:2]
 
-    # check to see if the width is None
-    if width is None:
-        # calculate the ratio of the height and construct the
-        # dimensions
-        r = height / float(h)
-        dim = (int(w * r), height)
+#     # if both the width and height are None, then return the
+#     # original image
+#     if width is None and height is None:
+#         return image
 
-    # otherwise, the height is None
-    else:
-        # calculate the ratio of the width and construct the
-        # dimensions
-        r = width / float(w)
-        dim = (width, int(h * r))
+#     # check to see if the width is None
+#     if width is None:
+#         # calculate the ratio of the height and construct the
+#         # dimensions
+#         r = height / float(h)
+#         dim = (int(w * r), height)
 
-    # resize the image
-    resized = cv2.resize(image, dim, interpolation = inter)
+#     # otherwise, the height is None
+#     else:
+#         # calculate the ratio of the width and construct the
+#         # dimensions
+#         r = width / float(w)
+#         dim = (width, int(h * r))
 
-    # return the resized image
-    return resized
+#     # resize the image
+#     resized = cv2.resize(image, dim, interpolation = inter)
+
+#     # return the resized image
+#     return resized
 
 
 # Add a scanner effect to the image.
@@ -311,7 +321,7 @@ def find_dest(pts):
 
 
 
-def scan(image_true=None, trained_model=None, image_size=384, BUFFER=10):
+def scan(image_true=None, trained_model=None, image_size=384, BUFFER=10, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
     """Scan the image and return the scanned image
     Args:
         image_true (np.array): Image to be scanned
@@ -337,6 +347,9 @@ def scan(image_true=None, trained_model=None, image_size=384, BUFFER=10):
     # Converting the image to tensor and normalizing it.
     image_model = preprocess_transforms(image_model)
     image_model = torch.unsqueeze(image_model, dim=0)
+
+    # Sending the image to the device.
+    image_model = image_model.to(device)
 
     with torch.no_grad():
         # Out: the output of the model
@@ -542,12 +555,14 @@ if uploaded_file is not None:
     if final is not None:
         with col3:
             # OCR the document
-            print(type(final))
-            scanned_img = image_resize(final, width=600)
-            # scanned_img = Image.fromarray(final[:, :, ::-1])
+            # print(type(final))
+            scanned_img = remove_shadows(final)
+            scanned_img = Image.fromarray(scanned_img)
             print(type(scanned_img))
-            scanned_img = remove_shadows(scanned_img)
-            scanned_img = Image.fromarray(scanned_img[:, :, ::-1])
+            print(scanned_img.size[0], scanned_img.size[1])
+            scanned_img = resize_image(scanned_img, size_x=600, size_y=1200)
+            # print(type(scanned_img))
+
             # text,scanned_img = ocr_document(scanned_img)
             # text = pytesseract.image_to_string(scanned_img, lang="fra")
             # st.title("ORG OCR Output")

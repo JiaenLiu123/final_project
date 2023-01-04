@@ -9,6 +9,12 @@ This repository contains the final project for JiaenLiu's Bachelor's degree in C
 Idealy, you need a machine in Ubuntu 18.04 to run this project. You can also run it in Windows, but you need to install tesseract OCR engine manually. The following packages are required to run this project:
 
 ```bash
+
+# Make sure you have install gcc ≥ 5.4 and g++ ≥ 5.4, detectron2 requires them to compile the C++ code.
+# If you don't have them, you can install them by:
+sudo apt install gcc g++
+
+# Install the required packages
 python -m pip install -r requirements.txt
 python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 python -m pip install torchvision tesseract
