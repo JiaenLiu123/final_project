@@ -1,8 +1,24 @@
-# final_project: Real-time Receipt Recognition
+# Final project: Real-time Receipt Recognition
 
 ## Introduction
 
 This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology. The project is a web app that can recognize receipts in real time and extract the information from the receipts.
+
+## Background
+
+## My approach
+
+- Step 1: Detect the receipt in the image
+
+    In this part, I followed a tutorial offered by LearnOpenCv. It shows how to use convolutional neural networks to detect one receipt inside of one image which the receipt can be twisted, unclosed, and some parts missing. 
+
+- Step 2: Resize the receipt and remove the shadow
+
+- Step 3: OCR and Name Entity Recognition
+
+## Need to be improved
+1. Correct the length of the prediction and the length of the words.  
+While I try to get the output of the model, it seems like the lenght of prediction and lenght of words are not the same. There are no good solutions on the Internet. For my personal experience, I found if OCR is more accurate, the probility of this problem will be lower. So I think the model can be improved by using a better OCR model.
 
 ## Installation
 
@@ -29,12 +45,6 @@ tesseract --version
 # Be careful to make sure the fra.traineddata and eng.traineddata are correct
 
 ```
-
-## Need to be improved
-1. Correct the length of the prediction and the length of the words.  
-While I try to get the output of the model, it seems like the lenght of prediction and lenght of words are not the same. There are no good solutions on the Internet. For my personal experience, I found if OCR is more accurate, the probility of this problem will be lower. So I think the model can be improved by using a better OCR model.
-
-
 
 ## Thanks
 This project is based on the following projects:  
