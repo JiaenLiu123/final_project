@@ -16,7 +16,7 @@ import base64
 '''
 def resize_image(image, size_x, size_y):
     if image.size[0] > size_x and image.size[1] > size_y:
-        image = image.resize((size_x, size_y))
+        image = image.resize((size_x, round(size_x / image.size[0] * image.size[1])))
     elif image.size[0] > size_x and image.size[1] < size_y:
         image = image.resize(size_x)
     elif image.size[1] > size_y and image.size[0] < size_x:
