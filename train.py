@@ -18,7 +18,7 @@ import pandas as pd
 # For better visualization of the results
 from alive_progress import alive_bar
 
-from layoutLM.layoutLMv2 import get_layoutlmv2, get_labels, process_image
+from layoutLM.layoutLMv3 import get_layoutlmv3, get_labels, process_image
 
 # Set some parameters
 # Only use the true images
@@ -38,7 +38,7 @@ def resize_image(image, size_x, size_y):
     return image
 
 # Load the model
-tokenizer, feature_extractor, model = get_layoutlmv2(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2")
+tokenizer, feature_extractor, model = get_layoutlmv3(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2")
 id2label, label2color = get_labels()
 
 
@@ -56,8 +56,6 @@ for file in files:
         output.append(json_df)
         print(json_df)
             # bar()
-
-
 
 # Save the output
 predic_df = pd.DataFrame(output)

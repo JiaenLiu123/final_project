@@ -11,7 +11,7 @@ import torchvision.transforms as torchvision_T
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 
 
-def get_layoutlmv2(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2"):
+def get_layoutlmv3(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2"):
     feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
     tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base-uncased")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
@@ -105,6 +105,7 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     # if length of words, predictions and boxes are not equal, then save the image
     if len(words) != len(true_predictions) or len(words) != len(true_boxes):
         image.save("error_images/" +str(uuid.uuid4()) + ".jpg")
+        print(len(words),len(true_predictions),len(true_boxes))
         print("There is an error when processing the image. Please check the error_images folder.")
     # print(words)
     # print(true_predictions)
@@ -117,7 +118,7 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     # print(zip(true_predictions, true_boxes))
     for ix, (prediction, box) in enumerate(zip(true_predictions, true_boxes)):
         predicted_label = iob_to_label(prediction).lower()
-        if prediction != 'O' and prediction != 'o':
+        if prediction != 'O':
             json_dict = {}
 
             json_dict["TEXT"] =  words[ix]

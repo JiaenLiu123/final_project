@@ -16,7 +16,7 @@ import re
 from dateutil.parser import parse
 
 from PIL import Image, ImageDraw, ImageFont
-from layoutLM.layoutLMv2 import  get_labels, process_image
+from layoutLM.layoutLMv3 import  get_labels, process_image
 # from streamlit_drawable_canvas import st_canvas
 from regex_script.test_all_regex import test_regex
 
@@ -34,8 +34,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Define the function to load the models
 @st.cache(allow_output_mutation=True)
-def get_layoutlmv2(ocr_lang = "fra"):
-    feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
+def get_layoutlmv3(ocr_lang = "fra",tesseract_config="--psm 12 --oem 2"):
+    feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
     tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")
     # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
     model = LayoutLMv3ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv3-finetuned-sroie")
@@ -86,9 +86,9 @@ result = None
 # Define the main function
 def main():
     st.set_page_config(initial_sidebar_state="collapsed")
-    tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv2()
+    tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv3()
     id2label, label2color = get_labels()
-    st.title("Document Scanner: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv2 and regex for key information extraction")
+    st.title("Document Scanner: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3 and regex for key information extraction")
 
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
@@ -139,7 +139,8 @@ def main():
             st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
         
         if json_df is not None:
-            st.title("Key Information extracted by LayoutLMv2")
+            st.title("Key Information extracted by LayoutLMv3")
+            print(json_df)
             # st.write(json_df)
             date = []
             total = ""
@@ -149,10 +150,11 @@ def main():
                     date.append(json_df[i]["TEXT"])
                     print(json_df[i]["TEXT"])
                 elif "total" in json_df[i]["LABEL"]:
-                    total = re.sub(r'[^\d.]', '', json_df[i]["TEXT"])
+                    # total = re.sub(r'[^\d.]', '', json_df[i]["TEXT"])
+                    total = json_df[i]["TEXT"]
                     # print(float(total))
             
-            st.write("Date: ", parse(" ".join(date), fuzzy=True).date().strftime("%d-%m-%Y"))
+            st.write("Date: ", " ".join(date))
             st.write("Total: ", total)
 
         st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
