@@ -2,15 +2,17 @@
 
 Author: Jiaen LIU 8/1/2023
 
-Cowork: Ivan STEPANIAN
+Co-worker: Ivan STEPANIAN
+
+Repository Link: https://github.com/JiaenLiu123/final_project
 
 ## Introduction
 
-This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app that can recognize receipt in real time and extract the information from the receipt.
+This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app that can recognize receipt in real time and extract the information from the receipt. In this project, two CNNs are applied for semantic segmentation of receipt, tesseract for OCR and Regex and LayoutLM models family for key information extraction. All of these parts will be introduced in the following sections.
 
 ## Background
 
-With the background of digital transformation, people want to digitalize existing data such as invoices, and recipts. These files are semi-structured. They have a general structure like the receipts, they have the address, telephone number, name of the shop in the top of the receipt, details of items in the middle of the receipt and total amount, details of tax and date in the end of the receipt. Obviously, there is some important structure information inside of the receipt. In this part, I will discuss all the steps before Key Information Extractions of receipts and organize them in sub-tasks format. I will discuss the model I choosed in next section.
+With the background of digital transformation, people want to digitalize existing data such as invoices, and recipts. These files are semi-structured. They have a general structure like the receipts, they have the address, telephone number, name of the shop in the top of the receipt, details of items in the middle of the receipt and total amount, details of tax and date in the end of the receipt. Obviously, there is some important structure information inside of the receipt. Instead of just getting the text from receipt, we want a step more, getting all key information inside of one receipt. In this part, I will discuss all the steps before Key Information Extractions of receipts and organize them in sub-tasks format. I will discuss the model I choosed in next section.
 
 - Receipt Localization
 
@@ -18,9 +20,8 @@ With the background of digital transformation, people want to digitalize existin
 
 - Optical Character Recognition
 
-  Optical Character Recognition 
+  Optical Character Recognition refers to convert any images with textual content to only text inside of this image, such as scanned printings, images of handwritings and photoed documents. There are two main steps in OCR, text detection and text recognition. Text detection's job is to localize all text in the image with bounding box, then text recognition will try to convert all text content within the bounding boxs into machine readable text. For this project, 
 
-  
 
 ## My approach
 
@@ -42,11 +43,14 @@ With the background of digital transformation, people want to digitalize existin
 
     My own understanding of the model:
 
+    At the beginning, I start to use layoutLMv2 as the main algorithms for the key information extraction. This model will leverage the information from 3 aspects, token embedding, visual embedding and layout embedding. For the token embedding, there are three parts in it, word embedding and segment embedding from WordPiece and 1D positional embedding to represent the token index. Visual embedding is generated from a CNN-based visual encoder, however, since CNN can not extract the positional information, a 1D positional embedding and segment embedding are added. For layout embedding, the spatial layout information is respented by axis-aligned token bounding boxes from the OCR results. 
+    ![img2](imgs/pic2.png)
     
-
-
+    Then I find that this model has a new version, layoutLMv3 and then I switch to the new model. There are two main modifications in the new model. First, layoutLMv3 change the ways of layout embedding, instead of using word-level layout positions, new model uses segment-level layout positions. The authors think that words in a segmnet share the same 2D position since the words usually express the shame semantic meaning. Second, for the image embedding, inspired by ViT and ViLT, layoutLMv3 uses linear projection features of image patches to represent the  document images and then fitting these embeddings into multimodal Transformer. To be honest, I do not have a deep understanding about that, I am not familiar with Vision Transformers. But I think this will reduce the computation and region supervision is not required anymore. And from the numbers given in the paper, new model beats the old one and the parameters are much less than previous model. 
+    ![img3](imgs/pic3.png)
 
 Flowchat of whole application:
+    ![img4](imgs/flowchart.png)
 
 
 
@@ -57,7 +61,7 @@ Flowchat of whole application:
 
   As I mentioned before, CNNs can detect and segment the receipt when the receipt is twisted and unclosed. But when they cannot unwarp the image back to flat. This can be done by DocUNet and DocTr. These models are desigened to unwarp the image back to its original state. I want to apply these methods in my project. But the cost of computation is too much to accept it. In future, I want to intergrate image unwarping into this project with a efficient way.
 
-  ![截屏2023-01-09 下午3.38.29](/Users/liujiaen/Library/Application Support/typora-user-images/截屏2023-01-09 下午3.38.29.png)
+![img1](imgs/pic1.png)
 
 2. Image Quality Assessment & Image Quality Improvement
 
@@ -67,14 +71,11 @@ Flowchat of whole application:
 
   As I discribed before, my goal is to create a tool that can extract all useful information from one receipt. I think if I manage to fine tune the model on my new dataset of date and total amount. I can apply this procedure to other information. I need more time to do that and I need to fully understand about this model, how it works and why it works. There are still a lot of jobs to do in this part. 
 
-  
-
 ## Installation
 
-Idealy, you need a machine in Ubuntu 18.04 to run this project. You can also run it in Windows by Windows Subsystem For Linux. You need to install tesseract OCR engine manually. The following packages are required to run this project:
+Idealy, you need a machine in Ubuntu 18.04 to run this project. There is no GPU requirement. You can also run it in Windows by Windows Subsystem For Linux. You need to install tesseract OCR engine manually. The following packages are required to run this project:
 
 ```bash
-
 # Make sure you have install gcc ≥ 5.4 and g++ ≥ 5.4, detectron2 requires them to compile the C++ code.
 # If you don't have them, you can install them by:
 sudo apt install gcc g++
@@ -93,9 +94,26 @@ sudo apt update
 tesseract --version
 # Be careful to make sure the fra.traineddata and eng.traineddata are correct
 
+# After successfully install all dependencies, you can just run following command to use the streamlit web application
+streamlit run cleaned_app.py
+
 ```
 
 ## Thanks
 This project is based on the following projects:  
 https://learnopencv.com/deep-learning-based-document-segmentation-using-semantic-segmentation-deeplabv3-on-custom-dataset/  
 https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie  
+
+Important papers:
+
+Ylisiurunen, Markus. "Extracting Semi-Structured Information from Receipts." (2022).
+
+Feng, Hao, et al. "Doctr: Document image transformer for geometric unwarping and illumination correction." *arXiv preprint arXiv:2110.12942* (2021).
+
+Huang, Yupan, et al. "LayoutLMv3: Pre-training for Document AI with Unified Text and Image Masking." *arXiv preprint arXiv:2204.08387* (2022).
+
+Artaud, Chloé, et al. "Receipt Dataset for Fraud Detection." *First International Workshop on Computational Document Forensics*. 2017.
+
+Howard, Andrew, et al. "Searching for mobilenetv3." *Proceedings of the IEEE/CVF international conference on computer vision*. 2019.
+
+Ma, Ke, et al. "Docunet: Document image unwarping via a stacked u-net." *Proceedings of the IEEE conference on computer vision and pattern recognition*. 2018.
