@@ -88,7 +88,7 @@ def main():
     st.set_page_config(initial_sidebar_state="collapsed")
     tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv3()
     id2label, label2color = get_labels()
-    st.title("Document Scanner: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3 and regex for key information extraction")
+    st.title("Receipt Extractor: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3 and regex for key information extraction")
 
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
