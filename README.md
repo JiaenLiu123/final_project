@@ -76,6 +76,10 @@ Flowchat of whole application:
 Idealy, you need a machine in Ubuntu 18.04 to run this project. There is no GPU requirement. You can also run it in Windows by Windows Subsystem For Linux. You need to install tesseract OCR engine manually. The following packages are required to run this project:
 
 ```bash
+# First download all codes from this repository
+git clone https://github.com/JiaenLiu123/final_project
+cd final_project
+
 # Make sure you have install gcc ≥ 5.4 and g++ ≥ 5.4, detectron2 requires them to compile the C++ code.
 # If you don't have them, you can install them by:
 sudo apt install gcc g++
@@ -94,7 +98,7 @@ sudo apt update
 tesseract --version
 # Be careful to make sure the fra.traineddata and eng.traineddata are correct
 
-# After successfully install all dependencies, you can just run following command to use the streamlit web application
+# After successfully install all dependencies, you can just run following command to use the streamlit web application. For the first run, it takes some time to download models from Internet.
 streamlit run cleaned_app.py
 
 ```
