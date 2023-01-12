@@ -108,6 +108,22 @@ This project is based on the following projects:
 https://learnopencv.com/deep-learning-based-document-segmentation-using-semantic-segmentation-deeplabv3-on-custom-dataset/  
 https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie  
 
+Datasets:
+
+Findit:
+
+https://drive.google.com/file/d/1fPOTGQS_wX0xCABrmk87OnWCr0rEE-Cx/view?usp=share_link
+
+https://drive.google.com/file/d/1Zog-6cY35vuJcJ24I6ZCKR57zEXqyrNB/view?usp=share_link
+
+https://drive.google.com/file/d/1GzCYqEqOTk2YRLUQemyOBV0TURB2RyPD/view?usp=share_link
+
+SORIE:
+
+https://drive.google.com/drive/folders/1xvZ6jpZQfpMHJCUD0L_5KHQy0T9QAepx?usp=share_link
+
+https://drive.google.com/drive/folders/11lDpn-rO3AmmyIMCYxYizZnP6BPgETsy?usp=share_link
+
 Important papers:
 
 Ylisiurunen, Markus. "Extracting Semi-Structured Information from Receipts." (2022).

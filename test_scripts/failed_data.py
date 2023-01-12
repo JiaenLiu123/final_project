@@ -7,7 +7,7 @@ import os
 
 
 # Load the data
-df = pd.read_csv("/Users/liujiaen/Documents/Text_Recognition/final_project/test_scripts/false.csv")
+df = pd.read_csv("/Users/liujiaen/Documents/Text_Recognition/final_project/test_scripts/test.csv")
 
 # Show the data
 st.write(df)
