@@ -1,0 +1,228 @@
+{
+    "output": [
+        {
+            "text": "11.16\u20ac",
+            "label": "TOTAL",
+            "words": [
+                {
+                    "id": 292,
+                    "box": [
+                        1438,
+                        2039,
+                        1593,
+                        2087
+                    ],
+                    "text": "11.16\u20ac"
+                }
+            ]
+        },
+        {
+            "text": "26/02/20",
+            "label": "DATE",
+            "words": [
+                {
+                    "id": 400,
+                    "box": [
+                        1002,
+                        3207,
+                        1213,
+                        3258
+                    ],
+                    "text": "26/02/20"
+                }
+            ]
+        },
+        {
+            "label": "COMPANY",
+            "text": "CR\u00c8\u2014",
+            "words": [
+                {
+                    "id": 189,
+                    "box": [
+                        424,
+                        646,
+                        560,
+                        745
+                    ],
+                    "text": "CR\u00c8\u2014"
+                }
+            ]
+        },
+        {
+            "label": "COMPANY",
+            "text": "CLTY",
+            "words": [
+                {
+                    "id": 190,
+                    "box": [
+                        570,
+                        687,
+                        708,
+                        748
+                    ],
+                    "text": "CLTY"
+                }
+            ]
+        },
+        {
+            "label": "COMPANY",
+            "text": "L\u00c0",
+            "words": [
+                {
+                    "id": 191,
+                    "box": [
+                        754,
+                        690,
+                        817,
+                        750
+                    ],
+                    "text": "L\u00c0"
+                }
+            ]
+        },
+        {
+            "label": "COMPANY",
+            "text": "ROCHELLE",
+            "words": [
+                {
+                    "id": 192,
+                    "box": [
+                        860,
+                        691,
+                        1142,
+                        757
+                    ],
+                    "text": "ROCHELLE"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "33",
+            "words": [
+                {
+                    "id": 193,
+                    "box": [
+                        425,
+                        773,
+                        491,
+                        833
+                    ],
+                    "text": "33"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "RUE",
+            "words": [
+                {
+                    "id": 194,
+                    "box": [
+                        534,
+                        775,
+                        636,
+                        836
+                    ],
+                    "text": "RUE"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "DE",
+            "words": [
+                {
+                    "id": 195,
+                    "box": [
+                        679,
+                        777,
+                        745,
+                        838
+                    ],
+                    "text": "DE"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "L\u00c0",
+            "words": [
+                {
+                    "id": 196,
+                    "box": [
+                        791,
+                        780,
+                        854,
+                        840
+                    ],
+                    "text": "L\u00c0"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "SCIERIE",
+            "words": [
+                {
+                    "id": 197,
+                    "box": [
+                        896,
+                        781,
+                        1142,
+                        845
+                    ],
+                    "text": "SCIERIE"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "17000",
+            "words": [
+                {
+                    "id": 198,
+                    "box": [
+                        431,
+                        861,
+                        601,
+                        924
+                    ],
+                    "text": "17000"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "L\u00c0",
+            "words": [
+                {
+                    "id": 199,
+                    "box": [
+                        755,
+                        867,
+                        818,
+                        928
+                    ],
+                    "text": "L\u00c0"
+                }
+            ]
+        },
+        {
+            "label": "ADDRESS",
+            "text": "ROCHELLE",
+            "words": [
+                {
+                    "id": 200,
+                    "box": [
+                        861,
+                        869,
+                        1143,
+                        934
+                    ],
+                    "text": "ROCHELLE"
+                }
+            ]
+        }
+    ]
+}
