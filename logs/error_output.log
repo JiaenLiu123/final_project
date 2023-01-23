@@ -1,0 +1,4 @@
+2023-01-23 14:43:23,839:ERROR:local variable 'i' referenced before assignment
+2023-01-23 14:47:26,900:ERROR:local variable 'i' referenced before assignment
+2023-01-23 14:48:11,850:ERROR:local variable 'i' referenced before assignment
+2023-01-23 14:48:47,548:ERROR:local variable 'i' referenced before assignment
