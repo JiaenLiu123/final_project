@@ -5,3 +5,6 @@
 failed_case
 # *.csv
 error_images
+text_output
+output_img
+testimage
