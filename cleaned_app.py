@@ -134,7 +134,7 @@ def main():
             st.title("Extracted Text")
             st.write(text)
             st.title("Key Information extracted by regex")
-            date, total = test_regex(text)
+            date, total = test_regex(text, True)
             st.write("Date: ", date[1].strftime("%d/%m/%Y %H:%M:%S"), f"({round(date[0] * 100)}% sure)")
             st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
         
