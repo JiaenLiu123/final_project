@@ -1,7 +1,7 @@
 # Author: Jiaen LIU
 # Date: 2023-01-02
 # This app is inspired by the following app:
-#   https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie/tree/main
+#  https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie/tree/main
 #  https://learnopencv.com/deep-learning-based-document-segmentation-using-semantic-segmentation-deeplabv3-on-custom-dataset/
 
 # Import the required libraries

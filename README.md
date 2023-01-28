@@ -73,7 +73,7 @@ Flowchat of whole application:
 
 ## Installation
 
-Idealy, you need a machine in Ubuntu 18.04 to run this project. There is no GPU requirement. You can also run it in Windows by Windows Subsystem For Linux. You need to install tesseract OCR engine manually. The following packages are required to run this project:
+Idealy, you need a machine in Ubuntu 18.04 to run this project. There is no GPU requirement. You can also run it in Windows by Windows Subsystem For Linux, that is due to detectron2 is not officially supported on Windows. You need to install tesseract OCR engine manually. The following packages are required to run this project:
 
 ```bash
 # First download all codes from this repository
@@ -82,7 +82,15 @@ cd final_project
 
 # Make sure you have install gcc ≥ 5.4 and g++ ≥ 5.4, detectron2 requires them to compile the C++ code.
 # If you don't have them, you can install them by:
+sudo apt update
 sudo apt install gcc g++
+
+# optional, create a virtual environment by conda
+conda create -n final_project python=3.8
+conda activate final_project
+# if you need gpu acceleration, you can install pytorch and torchvision by:
+conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+# if you don't need gpu acceleration, you can just uncomment torch and torchvision in requirements.txt and install them.
 
 # Install the required packages
 python -m pip install -r requirements.txt
@@ -95,7 +103,14 @@ sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel
 sudo apt install -y tesseract-ocr
 sudo apt update 
 # Check the version is correct (Should be the latest version)
-tesseract --version
+tesseract --version、
+
+# Add the language data for Tesseract 5
+# Use the following command to check the available languages and path to the language data
+tesseract --list-langs
+# Download the language data
+wget https://github.com/tesseract-ocr/tessdata/blob/main/fra.traineddata
+# if wget cannot work, you can download it from the link and put it in the correct path
 # Be careful to make sure the fra.traineddata and eng.traineddata are correct
 
 # After successfully install all dependencies, you can just run following command to use the streamlit web application. For the first run, it takes some time to download models from Internet.
