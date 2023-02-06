@@ -101,14 +101,13 @@ class ModelHandler(object):
         # TODO load the model state_dict before running the inference
         # Do some inference call to engine here and return output
         with torch.no_grad():
-            try: # 加上这句话
-    		# output = self.model(ts_batch)  # 出错的地方
+            try: 
                 inference_outputs = self.model(**model_input)
                 predictions = inference_outputs.logits.argmax(-1).tolist()
-            except RuntimeError as exception: # 加上这句话
-                if "out of memory" in str(exception): # 加上这句话
-                    print('WARNING: out of memory') # 加上这句话
-                    if hasattr(torch.cuda, 'empty_cache'): # 加上这句话
+            except RuntimeError as exception: 
+                if "out of memory" in str(exception): 
+                    print('WARNING: out of memory') 
+                    if hasattr(torch.cuda, 'empty_cache'): 
                         torch.cuda.empty_cache() 
         results = []
         for i in range(len(predictions)):
@@ -215,7 +214,7 @@ class ModelHandler(object):
                 for entity in flattened_output["output"]:
                     print(entity)
                     if entity['label'] == 'TOTAL' or entity['label'] == 'DATE':
-                        f.write(f"{image_name},{entity['text']},{entity['label']}\n")
+                        f.write(f"{image_name};{entity['text']};{entity['label']}\n")
             
 
 
