@@ -5,3 +5,40 @@
 2023-01-23 16:48:50,228:ERROR:Can only use .str accessor with string values!
 2023-01-26 17:12:27,320:ERROR:'NoneType' object is not iterable
 2023-01-26 17:13:13,345:ERROR:'NoneType' object is not iterable
+2023-01-26 17:23:38,037:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-01-26 17:26:26,460:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 08:46:48,393:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 08:50:35,471:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 08:53:07,415:ERROR:object of type 'generator' has no len()
+2023-02-06 08:55:54,956:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 09:17:24,416:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 09:44:13,390:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 3.53 GiB free; 2.48 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 09:47:56,645:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 3.53 GiB free; 2.48 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 09:51:23,585:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 3.53 GiB free; 2.48 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 09:57:17,194:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 3.53 GiB free; 2.48 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 09:59:55,488:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 3.53 GiB free; 2.48 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 10:02:15,458:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 4.47 GiB free; 1.54 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 10:04:27,883:ERROR:[Errno 2] No such file or directory: 'output_img/362_inference.jpg'
+2023-02-06 10:11:52,417:ERROR:CUDA out of memory. Tried to allocate 5.99 GiB (GPU 0; 8.00 GiB total capacity; 1.49 GiB already allocated; 4.47 GiB free; 1.54 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+2023-02-06 10:18:45,979:ERROR:local variable 'predictions' referenced before assignment
+2023-02-06 10:31:53,621:ERROR:Can only use .str accessor with string values!
+2023-02-06 10:41:43,690:ERROR:Can only use .str accessor with string values!
+2023-02-06 10:41:43,694:ERROR:Traceback (most recent call last):
+  File "test_handler.py", line 31, in <module>
+    inference_batch = prepare_batch_for_inference(batch)
+  File "/home/student/final_project/layoutLM/ocr.py", line 56, in prepare_batch_for_inference
+    clean_outputs = [run_and_clean_tesseract_on_image(image_path) for image_path in image_paths]
+  File "/home/student/final_project/layoutLM/ocr.py", line 56, in <listcomp>
+    clean_outputs = [run_and_clean_tesseract_on_image(image_path) for image_path in image_paths]
+  File "/home/student/final_project/layoutLM/ocr.py", line 23, in run_and_clean_tesseract_on_image
+    ocr_df = ocr_df.drop(ocr_df[ocr_df.text.str.strip() == ''].index)
+  File "/home/student/miniconda3/envs/py38/lib/python3.8/site-packages/pandas/core/generic.py", line 5902, in __getattr__
+    return object.__getattribute__(self, name)
+  File "/home/student/miniconda3/envs/py38/lib/python3.8/site-packages/pandas/core/accessor.py", line 182, in __get__
+    accessor_obj = self._accessor(obj)
+  File "/home/student/miniconda3/envs/py38/lib/python3.8/site-packages/pandas/core/strings/accessor.py", line 181, in __init__
+    self._inferred_dtype = self._validate(data)
+  File "/home/student/miniconda3/envs/py38/lib/python3.8/site-packages/pandas/core/strings/accessor.py", line 235, in _validate
+    raise AttributeError("Can only use .str accessor with string values!")
+AttributeError: Can only use .str accessor with string values!
+

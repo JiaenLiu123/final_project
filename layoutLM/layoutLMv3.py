@@ -14,14 +14,16 @@ import numpy as np
 import re
 import pandas as pd
 
-arr = []
-batch_size = 32
-# Create batches of size batch_size of the input data arr
-def create_batches(arr, batch_size):
-    for i in range(0, len(arr), batch_size):
-        yield arr[i:i + batch_size]
+# arr = []
+# batch_size = 32
+# # Create batches of size batch_size of the input data arr
+# def create_batches(arr, batch_size):
+#     for i in range(0, len(arr), batch_size):
+#         yield arr[i:i + batch_size]
 
 logger = logging.getLogger(__name__)
+
+# add gpu support
 
 class ModelHandler(object):
     """
@@ -31,7 +33,8 @@ class ModelHandler(object):
     def __init__(self):
         self.model = None
         self.model_dir = None
-        self.device = 'cpu'
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cpu")
         self.error = None
         # self._context = None
         # self._batch_size = 0
@@ -53,6 +56,7 @@ class ModelHandler(object):
         # self._batch_size = properties["batch_size"] or 1
         self.model_dir = properties.get("model_dir")
         self.model = self.load(self.model_dir)
+        self.model.to(self.device)
         self.initialized = True
 
     def preprocess(self, batch):
@@ -74,6 +78,8 @@ class ModelHandler(object):
                   for box in doc] for i, doc in enumerate(inference_dict['bboxes'])]
         encoded_inputs = processor(
             images, words, boxes=boxes, return_tensors="pt", padding="max_length", truncation=True)
+        for k,v in encoded_inputs.items():
+            encoded_inputs[k] = v.to(self.device)
         self._processed_data = encoded_inputs
         return encoded_inputs
 
@@ -95,8 +101,15 @@ class ModelHandler(object):
         # TODO load the model state_dict before running the inference
         # Do some inference call to engine here and return output
         with torch.no_grad():
-            inference_outputs = self.model(**model_input)
-            predictions = inference_outputs.logits.argmax(-1).tolist()
+            try: # 加上这句话
+    		# output = self.model(ts_batch)  # 出错的地方
+                inference_outputs = self.model(**model_input)
+                predictions = inference_outputs.logits.argmax(-1).tolist()
+            except RuntimeError as exception: # 加上这句话
+                if "out of memory" in str(exception): # 加上这句话
+                    print('WARNING: out of memory') # 加上这句话
+                    if hasattr(torch.cuda, 'empty_cache'): # 加上这句话
+                        torch.cuda.empty_cache() 
         results = []
         for i in range(len(predictions)):
             tmp = dict()

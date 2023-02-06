@@ -20,7 +20,10 @@ def run_and_clean_tesseract_on_image(image_path):
         print(e)
         return None
     ocr_df = ocr_df.dropna()
-    ocr_df = ocr_df.drop(ocr_df[ocr_df.text.str.strip() == ''].index)
+    try:
+        ocr_df = ocr_df.drop(ocr_df[ocr_df.text.str.strip() == ''].index)
+    except Exception as e:
+        print(e)
     text_output = ' '.join(ocr_df.text.tolist())
     words = []
     for index, row in ocr_df.iterrows():

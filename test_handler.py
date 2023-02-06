@@ -4,9 +4,15 @@ from layoutLM.ocr import prepare_batch_for_inference
 from asyncio.log import logger
 import logging
 import os
+import traceback
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-arr = []
-batch_size = 32
+if not os.path.exists("output_img"):
+    os.makedirs("output_img")
+
+# arr = []
+batch_size = 10
 # Create batches of size batch_size of the input data arr
 def create_batches(arr, batch_size):
     for i in range(0, len(arr), batch_size):
@@ -14,9 +20,11 @@ def create_batches(arr, batch_size):
 
 if __name__ == "__main__":
     try:
-        image_path = "/Users/liujiaen/Documents/Text_Recognition/dataset/findit/FindIt-Dataset-Train/T1-train/img"
+        image_path = "/home/student/T1-train/img"
         image_files = os.listdir(image_path)
+        print(len(image_files))
         image_paths = [image_path + f"/{image_file}" for image_file in image_files if image_file != ".DS_Store"]
+        # image_paths = image_paths[100:len(image_paths)]
         # create_batches(arr, batch_size)
         for batch in create_batches(image_paths, batch_size):
             print(batch)
@@ -31,3 +39,5 @@ if __name__ == "__main__":
         logging.basicConfig(filename="logs/error_output.log", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")
         logger = logging.getLogger(__name__)
         logger.error(e)
+        logger.error(traceback.format_exc())
+        # logger.error(traceback.format_exc())
