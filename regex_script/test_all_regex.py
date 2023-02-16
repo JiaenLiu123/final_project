@@ -157,6 +157,10 @@ def test_regex(text: str, verbose=False):
         print("Total matches:")
         print(total_scores)
 
+    if len(date_scores) == 0 or len(total_scores) == 0:
+        date_scores.append((0, None))
+        total_scores.append((0, None))
+
     date = date_scores[0]
     total = total_scores[0]
     if date[0] < 0.35:

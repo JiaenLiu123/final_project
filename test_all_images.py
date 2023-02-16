@@ -46,6 +46,7 @@ if __name__ == "__main__":
         image_paths = [image_path + f"/{image_file}" for image_file in image_files if image_file != ".DS_Store"]
         # image_paths = image_paths[100:len(image_paths)]
         # create_batches(arr, batch_size)
+        print(len(image_paths))
         index = 0
         for file in image_paths:
             print(index)

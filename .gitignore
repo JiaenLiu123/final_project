@@ -8,3 +8,5 @@ error_images
 # text_output
 output_img
 testimage
+logs
+*.log
