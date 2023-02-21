@@ -14,6 +14,8 @@ import numpy as np
 import re
 import pandas as pd
 
+from regex_script.test_all_regex import test_regex
+
 # arr = []
 # batch_size = 32
 # # Create batches of size batch_size of the input data arr
@@ -74,6 +76,8 @@ class ModelHandler(object):
                   for path in inference_dict['image_path']]
         self._images_size = [img.size for img in images]
         words = inference_dict['words']
+        # text = " ".join(words)
+
         boxes = [[normalize_box(box, images[i].size[0], images[i].size[1])
                   for box in doc] for i, doc in enumerate(inference_dict['bboxes'])]
         encoded_inputs = processor(

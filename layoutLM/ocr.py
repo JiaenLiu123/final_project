@@ -2,6 +2,10 @@ import os
 import pandas as pd
 import pytesseract
 
+from regex_script.test_all_regex import test_regex
+
+
+
 # def run_tesseract_on_image(image_path):  # -> tsv output path
 #   image_name = os.path.basename(image_path)
 #   image_name = image_name[:image_name.find('.')]
@@ -33,6 +37,12 @@ def run_and_clean_tesseract_on_image(image_path):
         word['word_text'] = row['text']
         word['word_box'] = origin_box
         words.append(word)
+    text = " ".join([word['word_text'] for word in words])
+    date, total = test_regex(text)
+    image_name = os.path.basename(image_path)
+    image_name = image_name[:image_name.find('.')]
+    with open("text_output/output_regex.csv") as f:
+        f.write(f"{image_name},{date},{total}")
     return words
 
 
