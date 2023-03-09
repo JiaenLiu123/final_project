@@ -1,0 +1,3 @@
+new data from nowhere
+168;12.41;TOTAL
+168;13/01/2017;DATE

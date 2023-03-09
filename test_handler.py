@@ -7,6 +7,9 @@ import os
 import traceback
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+from PIL import Image,ImageDraw, ImageFont
+from matplotlib.pyplot import imshow
+import numpy as np
 
 if not os.path.exists("output_img"):
     os.makedirs("output_img")
@@ -20,20 +23,21 @@ def create_batches(arr, batch_size):
 
 if __name__ == "__main__":
     try:
-        image_path = "/home/student/T1-train/img"
-        image_files = os.listdir(image_path)
-        print(len(image_files))
-        image_paths = [image_path + f"/{image_file}" for image_file in image_files if image_file != ".DS_Store"]
-        # image_paths = image_paths[100:len(image_paths)]
-        # create_batches(arr, batch_size)
-        for batch in create_batches(image_paths, batch_size):
-            print(batch)
-            inference_batch = prepare_batch_for_inference(batch)
-            context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
-            handle(inference_batch, context)
-        # inference_batch = prepare_batch_for_inference(image_paths)
-        # context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
-        # handle(inference_batch, context)
+        # image_path = "/home/student/T1-train/img"
+        # image_files = os.listdir(image_path)
+        # print(len(image_files))
+        # image_paths = [image_path + f"/{image_file}" for image_file in image_files if image_file != ".DS_Store"]
+        # # image_paths = image_paths[100:len(image_paths)]
+        # # create_batches(arr, batch_size)
+        # for batch in create_batches(image_paths, batch_size):
+        # print(batch)
+        test_image = [Image.open("/home/jiaenliu/final_project/testimage/4.jpg").convert("RGB")]
+        inference_batch = prepare_batch_for_inference(test_image)
+        context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
+        data, img = handle(inference_batch, context)
+        print(data)
+        imshow(np.asarray(img))
+
     except Exception as e:
         os.makedirs("logs", exist_ok=True)
         logging.basicConfig(filename="logs/error_output.log", level=logging.DEBUG, format="%(asctime)s:%(levelname)s:%(message)s")

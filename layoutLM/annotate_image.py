@@ -30,7 +30,7 @@ def get_flattened_output(docs):
 
 def annotate_image(image_path, annotation_object):
     img = None
-    image = Image.open(image_path).convert('RGBA')
+    image = image_path.convert("RGBA")
     tmp = image.copy()
     label2color = image_label_2_color(annotation_object)
     overlay = Image.new('RGBA', tmp.size, (0, 0, 0)+(0,))
@@ -47,14 +47,12 @@ def annotate_image(image_path, annotation_object):
 
     img = Image.alpha_composite(tmp, overlay)
     img = img.convert("RGB")
-
-
-    image_name = os.path.basename(image_path)
-    image_name = image_name[:image_name.find('.')]
-    img.save(f'output_img/{image_name}_inference.jpg')
-    with open(f'output_img/{image_name}_inference.json', 'w') as f:
-        #   f.write(annotation_object)
-        json.dump(annotation_object, f, indent=4)
+    # image_name = os.path.basename(image_path)
+    # image_name = image_name[:image_name.find('.')]
+    # img.save(f'output_img/{image_name}_inference.jpg')
+    # with open(f'output_img/{image_name}_inference.json', 'w') as f:
+    #     #   f.write(annotation_object)
+    #     json.dump(annotation_object, f, indent=4)
 
     
     return img

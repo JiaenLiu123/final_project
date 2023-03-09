@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import re
 import pandas as pd
+import pytesseract
 
 # arr = []
 # batch_size = 32
@@ -70,8 +71,10 @@ class ModelHandler(object):
         inference_dict = batch
         self._raw_input_data = inference_dict
         processor = load_processor()
-        images = [Image.open(path).convert("RGB")
-                  for path in inference_dict['image_path']]
+        images = inference_dict['images']
+        print(images)
+        print(type(images))
+        print(len(images))
         self._images_size = [img.size for img in images]
         words = inference_dict['words']
         boxes = [[normalize_box(box, images[i].size[0], images[i].size[1])
@@ -197,6 +200,8 @@ class ModelHandler(object):
         :param data: input data
         :param context: mms context
         """
+        img = None
+        flattened_output = None
         model_input = self.preprocess(data)
         # print()
         model_out = self.inference(model_input)
@@ -205,16 +210,13 @@ class ModelHandler(object):
             inf_out.write(inference_out)
         inference_out_list = json.loads(inference_out)
         flattened_output_list = get_flattened_output(inference_out_list)
-        for i, flattened_output in enumerate(flattened_output_list):
-            annotate_image(data['image_path'][i], flattened_output)
-            image_name = os.path.basename(data['image_path'][i])
-            image_name = image_name[:image_name.find('.')]
-            # print(flattened_output)
-            with open("text_output/output.csv", "a+") as f:
-                for entity in flattened_output["output"]:
-                    print(entity)
-                    if entity['label'] == 'TOTAL' or entity['label'] == 'DATE':
-                        f.write(f"{image_name};{entity['text']};{entity['label']}\n")
+        print(flattened_output_list)
+        print(len(flattened_output_list))
+        img = annotate_image(data['images'][0], flattened_output_list[0])
+        # img.save(f"annotated_image_{0}.png")
+
+        return flattened_output_list[0], img
+            
             
 
 
@@ -234,23 +236,7 @@ def handle(data, context):
 
 
 
-# class LayoutLMv3Interface:
-
-#     def __init__(self, ocr_lang="fra", tesseract_config="--psm 12 --oem 2"):
-#         self.model = None
-#         self.model_path = None
-#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#         self.error = None
-#         self.initialized = False
-#         self._raw_input_data = None
-#         self._processed_data = None
-#         self._images_size = None
-    
-#     def initialize(self, context):
-#         self._context = context
-#         properties = self._context
-        
-#         self.initialized = True
+from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 
 
 def get_layoutlmv3(ocr_lang = "fra", tesseract_config = "--psm 12 --oem 2"):

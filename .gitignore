@@ -1,7 +1,6 @@
 *.pth
 .DS_Store
 *__pycache__
-# output_img
 failed_case
 # *.csv
 error_images

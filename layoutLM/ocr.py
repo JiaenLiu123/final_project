@@ -15,7 +15,7 @@ import pytesseract
 
 def run_and_clean_tesseract_on_image(image_path):
     try:
-        ocr_df = pytesseract.image_to_data(image_path, output_type="data.frame", lang="fra", config='--psm 12 --oem 2')
+        ocr_df = pytesseract.image_to_data(image_path, output_type="data.frame", lang="fra", config='--psm 12 --oem 1')
     except Exception as e:
         print(e)
         return None
@@ -52,17 +52,17 @@ def run_and_clean_tesseract_on_image(image_path):
 #   return words
 
 
-def prepare_batch_for_inference(image_paths):
+def prepare_batch_for_inference(images):
   # tesseract_outputs is a list of paths
   inference_batch = dict()
   # clean_outputs is a list of lists
-  clean_outputs = [run_and_clean_tesseract_on_image(image_path) for image_path in image_paths]
+  clean_outputs = [run_and_clean_tesseract_on_image(image) for image in images]
   word_lists = [[word['word_text'] for word in clean_output]
                 for clean_output in clean_outputs]
   boxes_lists = [[word['word_box'] for word in clean_output]
                  for clean_output in clean_outputs]
   inference_batch = {
-      "image_path": image_paths,
+      "images": images,
       "bboxes": boxes_lists,
       "words": word_lists
   }
