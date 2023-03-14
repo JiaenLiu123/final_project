@@ -29,6 +29,11 @@ from utils.utils import resize_image, get_image_download_link, remove_shadows
 
 from layoutLM.layoutLMv3 import handle
 from layoutLM.ocr import prepare_batch_for_inference
+@st.cache(allow_output_mutation=True)
+def get_donut():
+    from donut import DonutModel
+    donut = DonutModel.from_pretrained("/home/jiaenliu/final_project/20230313_111731")
+    return donut
 
 # Set environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -89,6 +94,11 @@ def main():
     method = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
     
     col1, col2, col3, col4 = st.columns(4)
+    method_seg = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
+
+    method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut"), horizontal=True)
+
+    col1, col2, col3 = st.columns(3)
 
     if uploaded_file is not None:
         # Convert the file to an opencv image.
@@ -96,7 +106,7 @@ def main():
         image = cv2.imdecode(file_bytes, 1)
         # h, w = image.shape[:2]
 
-        if method == "MobilenetV3-Large":
+        if method_seg == "MobilenetV3-Large":
             model = load_model(model_name="mbv3")
         else:
             model = load_model(model_name="r50")
@@ -127,6 +137,21 @@ def main():
                 json_df, annotated_img = handle(inference_bath, context)
                 text = inference_bath["text"][0]
                 st.image(annotated_img, channels="BGR", use_column_width=True)
+                if method_du == "LayoutLMv3":
+                    annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
+                    st.image(annotated_img, channels="BGR", use_column_width=True)
+                else:
+                    donut = get_donut()
+                    if torch.cuda.is_available():
+                        model.half()
+                        device = torch.device("cuda")
+                        model.to(device)
+                    else:
+                        model.encoder.to(torch.bfloat16)
+                    model.eval()
+                    output = donut.inference(image=scanned_image, prompt="<s_sroie_donut>")
+                    st.write(output)
+                
         
         # Display the output
         if text is not None:
@@ -157,3 +182,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+# {"prompt":"you will translate following sentences into chinese\n<ENGLISH SCRIPT>\n\n###\n\n", "completion":"<CHINESE SENTENCES FROM PREVIOUS WORK>"}
