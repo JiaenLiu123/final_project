@@ -246,3 +246,25 @@ TypeError: expected str, bytes or os.PathLike object, not Image
     p = os.fspath(p)
 TypeError: expected str, bytes or os.PathLike object, not Image
 
+2023-03-09 14:41:02,860:ERROR:[Errno 2] No such file or directory: '/home/jiaenliu/final_project/testimage/4.jpg'
+2023-03-09 14:41:02,861:ERROR:Traceback (most recent call last):
+  File "test_handler.py", line 34, in <module>
+    test_image = [Image.open("/home/jiaenliu/final_project/testimage/4.jpg").convert("RGB")]
+  File "/Users/liujiaen/opt/miniconda3/envs/ssg/lib/python3.8/site-packages/PIL/Image.py", line 3227, in open
+    fp = builtins.open(filename, "rb")
+FileNotFoundError: [Errno 2] No such file or directory: '/home/jiaenliu/final_project/testimage/4.jpg'
+
+2023-03-09 14:42:51,710:ERROR:expected str, bytes or os.PathLike object, not Image
+2023-03-09 14:42:51,711:ERROR:Traceback (most recent call last):
+  File "test_handler.py", line 35, in <module>
+    inference_batch = prepare_batch_for_inference(test_image)
+  File "/Users/liujiaen/Documents/Text_Recognition/final_project/layoutLM/ocr.py", line 69, in prepare_batch_for_inference
+    clean_outputs = [run_and_clean_tesseract_on_image(image) for image in images]
+  File "/Users/liujiaen/Documents/Text_Recognition/final_project/layoutLM/ocr.py", line 69, in <listcomp>
+    clean_outputs = [run_and_clean_tesseract_on_image(image) for image in images]
+  File "/Users/liujiaen/Documents/Text_Recognition/final_project/layoutLM/ocr.py", line 42, in run_and_clean_tesseract_on_image
+    image_name = os.path.basename(image_path)
+  File "/Users/liujiaen/opt/miniconda3/envs/ssg/lib/python3.8/posixpath.py", line 142, in basename
+    p = os.fspath(p)
+TypeError: expected str, bytes or os.PathLike object, not Image
+

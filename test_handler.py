@@ -31,7 +31,7 @@ if __name__ == "__main__":
         # # create_batches(arr, batch_size)
         # for batch in create_batches(image_paths, batch_size):
         # print(batch)
-        test_image = [Image.open("/home/jiaenliu/final_project/testimage/4.jpg").convert("RGB")]
+        test_image = [Image.open("/Users/liujiaen/Documents/Text_Recognition/final_project/testimage/5.jpg").convert("RGB")]
         inference_batch = prepare_batch_for_inference(test_image)
         context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
         data, img = handle(inference_batch, context)

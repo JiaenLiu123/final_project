@@ -21,25 +21,17 @@ from layoutLM.layoutLMv3 import  get_labels, process_image
 from regex_script.test_all_regex import test_regex
 
 import torch
-import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
-from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 from torchvision.datasets.utils import download_file_from_google_drive
 
 from Semantic_Segmentation.seg import scan, image_preprocess_transforms
 from utils.utils import resize_image, get_image_download_link, remove_shadows
 
+from layoutLM.layoutLMv3 import handle
+from layoutLM.ocr import prepare_batch_for_inference
+
 # Set environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-# Define the function to load the models
-@st.cache(allow_output_mutation=True)
-def get_layoutlmv3(ocr_lang = "fra",tesseract_config="--psm 12 --oem 2"):
-    feature_extractor = LayoutLMv3FeatureExtractor(ocr_lang=ocr_lang,tesseract_config=tesseract_config)
-    tokenizer = LayoutLMv3TokenizerFast.from_pretrained("microsoft/layoutlmv3-base")
-    # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
-    model = LayoutLMv3ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv3-finetuned-sroie")
-    return tokenizer, feature_extractor, model
 
 @st.cache(allow_output_mutation=True)
 def load_model(num_classes=2, model_name="mbv3", device= torch.device("cuda" if torch.cuda.is_available() else "cpu")):
@@ -85,16 +77,18 @@ result = None
 
 # Define the main function
 def main():
-    st.set_page_config(initial_sidebar_state="collapsed")
-    tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv3()
-    id2label, label2color = get_labels()
+    # st.set_page_config(layout="wide")
+    st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
+    # tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv3()
+
+    # id2label, label2color = get_labels()
     st.title("Receipt Extractor: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3 and regex for key information extraction")
 
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
     method = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     if uploaded_file is not None:
         # Convert the file to an opencv image.
@@ -115,21 +109,26 @@ def main():
             st.title("Scanned")
             final = scan(preprocess_transforms,image, model, IMAGE_SIZE)
             st.image(final, channels="BGR", use_column_width=True)
+                        
+        with col3:
+            st.title("preprocessed Image")
             scanned_image = remove_shadows(final)
+            scanned_image = cv2.copyMakeBorder(scanned_image, 30, 30, 30, 30, cv2.BORDER_CONSTANT,value=[0,0,0])
             scanned_image = Image.fromarray(scanned_image)
             scanned_image = resize_image(scanned_image, sizes[0], sizes[1])
-            st.title("Resized and Shadow Removed Image")
             st.image(scanned_image, channels="BGR", use_column_width=True)
 
         if final is not None:
-            with col3:
+            with col4:
                 st.title("Annotated Image")
-                annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
-
+                # annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
+                inference_bath = prepare_batch_for_inference([scanned_image])
+                context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
+                json_df, annotated_img = handle(inference_bath, context)
+                text = inference_bath["text"][0]
                 st.image(annotated_img, channels="BGR", use_column_width=True)
         
         # Display the output
-
         if text is not None:
             st.title("Extracted Text")
             st.write(text)
@@ -144,15 +143,11 @@ def main():
             # st.write(json_df)
             date = []
             total = ""
-            for i in range(len(json_df)):
-                if "date" in json_df[i]["LABEL"] :
-                    # date = json_df[i]["TEXT"]
-                    date.append(json_df[i]["TEXT"])
-                    print(json_df[i]["TEXT"])
-                elif "total" in json_df[i]["LABEL"]:
-                    # total = re.sub(r'[^\d.]', '', json_df[i]["TEXT"])
-                    total = json_df[i]["TEXT"]
-                    # print(float(total))
+            for entity in json_df["output"]:
+                if entity["label"] == "DATE":
+                    date.append(entity["text"])
+                elif entity["label"] == "TOTAL":
+                    total = entity["text"]
             
             st.write("Date: ", " ".join(date))
             st.write("Total: ", total)

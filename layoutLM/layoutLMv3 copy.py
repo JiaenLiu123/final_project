@@ -234,26 +234,6 @@ def handle(data, context):
 
     return _service.handle(data, context)
 
-
-
-# class LayoutLMv3Interface:
-
-#     def __init__(self, ocr_lang="fra", tesseract_config="--psm 12 --oem 2"):
-#         self.model = None
-#         self.model_path = None
-#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#         self.error = None
-#         self.initialized = False
-#         self._raw_input_data = None
-#         self._processed_data = None
-#         self._images_size = None
-    
-#     def initialize(self, context):
-#         self._context = context
-#         properties = self._context
-        
-#         self.initialized = True
-
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3FeatureExtractor, LayoutLMv3TokenizerFast
 
 def get_and_clean_OCR(image, ocr_lang="fra", tesseract_config="--psm 12 --oem 1"):

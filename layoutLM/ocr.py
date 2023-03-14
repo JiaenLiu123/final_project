@@ -38,12 +38,12 @@ def run_and_clean_tesseract_on_image(image_path):
         word['word_box'] = origin_box
         words.append(word)
     text = " ".join([word['word_text'] for word in words])
-    date, total = test_regex(text)
-    image_name = os.path.basename(image_path)
-    image_name = image_name[:image_name.find('.')]
-    with open("text_output/output_regex.csv") as f:
-        f.write(f"{image_name},{date},{total}")
-    return words
+    # date, total = test_regex(text)
+    # image_name = os.path.basename(image_path)
+    # image_name = image_name[:image_name.find('.')]
+    # with open("text_output/output_regex.csv") as f:
+    #     f.write(f"{image_name},{date},{total}")
+    return words, text
 
 
 # def clean_tesseract_output(tsv_output_path):
@@ -66,7 +66,19 @@ def prepare_batch_for_inference(images):
   # tesseract_outputs is a list of paths
   inference_batch = dict()
   # clean_outputs is a list of lists
-  clean_outputs = [run_and_clean_tesseract_on_image(image) for image in images]
+#   clean_outputs = [run_and_clean_tesseract_on_image(image)[0] for image in images]
+#   text = [run_and_clean_tesseract_on_image(image)[1] for image in images]
+  clean_outputs = []
+  text = []
+  for image in images:
+      try:
+          ocr_output = run_and_clean_tesseract_on_image(image)
+          clean_outputs.append(ocr_output[0])
+          text.append(ocr_output[1])
+      except Exception as e:
+          print(e)
+          clean_outputs.append(None)
+          text.append(None)
   word_lists = [[word['word_text'] for word in clean_output]
                 for clean_output in clean_outputs]
   boxes_lists = [[word['word_box'] for word in clean_output]
@@ -74,6 +86,7 @@ def prepare_batch_for_inference(images):
   inference_batch = {
       "images": images,
       "bboxes": boxes_lists,
-      "words": word_lists
+      "words": word_lists,
+      "text": text
   }
   return inference_batch
