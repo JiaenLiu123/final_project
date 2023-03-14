@@ -21,22 +21,24 @@ from layoutLM.layoutLMv3 import  get_labels, process_image
 from regex_script.test_all_regex import test_regex
 
 import torch
+import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
 from torchvision.datasets.utils import download_file_from_google_drive
 
 from Semantic_Segmentation.seg import scan, image_preprocess_transforms
 from utils.utils import resize_image, get_image_download_link, remove_shadows
-
+from transformers import LayoutLMv2ForTokenClassification, LayoutLMv2FeatureExtractor, LayoutLMv2TokenizerFast
 from layoutLM.layoutLMv3 import handle
 from layoutLM.ocr import prepare_batch_for_inference
+
+# Set environment variables
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 @st.cache(allow_output_mutation=True)
 def get_donut():
     from donut import DonutModel
     donut = DonutModel.from_pretrained("/home/jiaenliu/final_project/20230313_111731")
     return donut
-
-# Set environment variables
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 @st.cache(allow_output_mutation=True)
 def load_model(num_classes=2, model_name="mbv3", device= torch.device("cuda" if torch.cuda.is_available() else "cpu")):
@@ -54,6 +56,122 @@ def load_model(num_classes=2, model_name="mbv3", device= torch.device("cuda" if 
     _ = model(torch.randn((1, 3, 384, 384)).to(device))
     return model
 
+# Load LayoutLMv2 model
+@st.cache(allow_output_mutation=True)
+def get_layoutlmv2(ocr_lang = "fra"):
+    feature_extractor = LayoutLMv2FeatureExtractor(ocr_lang=ocr_lang,tesseract_config="--psm 12 --oem 2")
+    tokenizer = LayoutLMv2TokenizerFast.from_pretrained("microsoft/layoutlmv2-base-uncased")
+    # processor = LayoutLMv2Processor(feature_extractor, tokenizer)
+    model = LayoutLMv2ForTokenClassification.from_pretrained("Theivaprakasham/layoutlmv2-finetuned-sroie")
+    return tokenizer, feature_extractor, model
+
+# get the labels
+@st.cache(allow_output_mutation=True)
+def get_labels():
+    labels = ['O', 'B-COMPANY', 'I-COMPANY', 'B-DATE', 'I-DATE', 'B-ADDRESS', 'I-ADDRESS', 'B-TOTAL', 'I-TOTAL']
+    id2label = {v: k for v, k in enumerate(labels)}
+    label2color = {'B-ADDRESS': 'blue',
+    'B-COMPANY': 'green',
+    'B-DATE': 'red',
+    'B-TOTAL': 'red',
+    'I-ADDRESS': "blue",
+    'I-COMPANY': 'green',
+    'I-DATE': 'red',
+    'I-TOTAL': 'red',
+    'O': 'green'}
+
+    label2color = dict((k.lower(), v.lower()) for k,v in label2color.items())
+    return id2label, label2color
+
+# Unnormalize the bounding box coordinates.
+def unnormalize_box(bbox, width, height):
+     return [
+         width * (bbox[0] / 1000),
+         height * (bbox[1] / 1000),
+         width * (bbox[2] / 1000),
+         height * (bbox[3] / 1000),
+     ]
+
+# iob to label
+def iob_to_label(label):
+    return label
+
+def process_image(image, feature_extractor, tokenizer, model, id2label, label2color):
+    """
+    Process the image and return predictions.
+
+    Args:
+        image (PIL.Image): Image to be processed.
+        # processor (LayoutLMv2Processor): LayoutLMv2 processor.
+        feature_extractor (LayoutLMv2FeatureExtractor): LayoutLMv2 feature extractor.
+        tokenizer (LayoutLMv2TokenizerFast): LayoutLMv2 tokenizer.
+        model (LayoutLMv2ForTokenClassification): LayoutLMv2 model.
+        id2label (dict): Dictionary mapping label id to label name.
+        label2color (dict): Dictionary mapping label name to color.
+    Returns:
+        PIL.Image: Image with predictions drawn on it.
+    """
+    width, height = image.size
+
+    # encode the image, get the bounding boxes and the words
+    encoding_feature_extractor = feature_extractor(image, return_tensors="pt")
+    # print(encoding_feature_extractor.keys())
+    # print(encoding_feature_extractor.words)
+    # TODO: apply the regex to the words
+    words, boxes = encoding_feature_extractor.words[0], encoding_feature_extractor.boxes[0]
+    # print(words)
+    text = " ".join(words)
+    encoding = tokenizer(words, boxes=boxes, return_offsets_mapping=True, return_tensors="pt", truncation=True)
+    # encoding = processor(image, truncation=True, return_offsets_mapping=True, return_tensors="pt")
+    offset_mapping = encoding.pop('offset_mapping')
+    encoding["image"] = encoding_feature_extractor.pixel_values
+
+    # forward pass
+    outputs = model(**encoding)
+
+    # get the text of OCR output
+    
+
+    # get predictions
+    predictions = outputs.logits.argmax(-1).squeeze().tolist()
+    token_boxes = encoding.bbox.squeeze().tolist()
+
+    # only keep non-subword predictions
+    is_subword = np.array(offset_mapping.squeeze().tolist())[:,0] != 0
+    true_predictions = [id2label[pred] for idx, pred in enumerate(predictions) if not is_subword[idx]]
+    # print(true_predictions)
+    true_boxes = [unnormalize_box(box, width, height) for idx, box in enumerate(token_boxes) if not is_subword[idx]]
+
+
+    true_boxes = true_boxes[1:-1]
+    true_predictions = true_predictions[1:-1]
+
+    json_df = []
+
+    for i,j in enumerate(true_predictions):
+        if j != 'O' and j != 'o':
+            json_dict = {}
+
+            json_dict["TEXT"] =  words[i]
+            json_dict["LABEL"] = j
+
+            json_df.append(json_dict)
+
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    # print(zip(true_predictions, true_boxes))
+    for ix, (prediction, box) in enumerate(zip(true_predictions, true_boxes)):
+        predicted_label = iob_to_label(prediction).lower()
+        # if predicted_label != 'o':
+        #     box_img = image.crop(box)
+        #     text.append((pytesseract.image_to_string(box_img, lang='fra'), predicted_label))
+        draw.rectangle(box, outline=label2color[predicted_label])
+        draw.text((box[0]+10, box[1]-10), text=predicted_label, fill=label2color[predicted_label], font=font)
+
+    # get the text from the labeled box 
+    # print(text)
+    # date,total = test_regex(text)
+    return image, text, json_df
 
 # Check if the model is already downloaded
 # If not, download the model
@@ -79,26 +197,18 @@ sizes = (600,1200)
 image = None
 final = None
 result = None
+# global text
 
 # Define the main function
 def main():
-    # st.set_page_config(layout="wide")
     st.set_page_config(initial_sidebar_state="collapsed", layout="wide")
-    # tokenizer, feature_extractor, layoutlmv2 = get_layoutlmv3()
-
-    # id2label, label2color = get_labels()
-    st.title("Receipt Extractor: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3 and regex for key information extraction")
-
+    st.title("Receipt Extractor: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3, Donut and regex for key information extraction")
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
-    method = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
     method_seg = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
+    method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut", "LayoutLMv2"), horizontal=True)
 
-    method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut"), horizontal=True)
-
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
 
     if uploaded_file is not None:
         # Convert the file to an opencv image.
@@ -121,7 +231,7 @@ def main():
             st.image(final, channels="BGR", use_column_width=True)
                         
         with col3:
-            st.title("preprocessed Image")
+            st.title("Preprocessed")
             scanned_image = remove_shadows(final)
             scanned_image = cv2.copyMakeBorder(scanned_image, 30, 30, 30, 30, cv2.BORDER_CONSTANT,value=[0,0,0])
             scanned_image = Image.fromarray(scanned_image)
@@ -130,16 +240,22 @@ def main():
 
         if final is not None:
             with col4:
-                st.title("Annotated Image")
                 # annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
-                inference_bath = prepare_batch_for_inference([scanned_image])
-                context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
-                json_df, annotated_img = handle(inference_bath, context)
-                text = inference_bath["text"][0]
-                st.image(annotated_img, channels="BGR", use_column_width=True)
                 if method_du == "LayoutLMv3":
-                    annotated_img, text, json_df = process_image(scanned_image, feature_extractor, tokenizer, layoutlmv2, id2label, label2color)
+                    st.title("Annotated Image")
+                    inference_bath = prepare_batch_for_inference([scanned_image])
+                    context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
+                    json_df, annotated_img = handle(inference_bath, context)
+                    text = inference_bath["text"][0]
                     st.image(annotated_img, channels="BGR", use_column_width=True)
+                    # st.image(annotated_img, channels="BGR", use_column_width=True)
+                elif method_du == "LayoutLMv2":
+                    st.title("Annotated Image")
+                    tokenizer, feature_extractor, layoutLMv2 = get_layoutlmv2()
+                    id2label, label2color = get_labels()
+                    annotated_img, text, json_df = process_image(scanned_image, feature_extractor,tokenizer, layoutLMv2, id2label, label2color)
+                    st.image(annotated_img, channels="BGR", use_column_width=True)
+                    # st.write("No annotated image available for LayoutLMv2")
                 else:
                     donut = get_donut()
                     if torch.cuda.is_available():
@@ -149,8 +265,10 @@ def main():
                     else:
                         model.encoder.to(torch.bfloat16)
                     model.eval()
-                    output = donut.inference(image=scanned_image, prompt="<s_sroie_donut>")
-                    st.write(output)
+                    json_df = donut.inference(image=scanned_image, prompt="<s_sroie_donut>")
+                    text = None
+                    # st.write(json_df)
+                    st.write("No annotated image available for Donut")
                 
         
         # Display the output
@@ -163,27 +281,34 @@ def main():
             st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
         
         if json_df is not None:
-            st.title("Key Information extracted by LayoutLMv3")
-            print(json_df)
+            # print(json_df)
             # st.write(json_df)
-            date = []
-            total = ""
-            for entity in json_df["output"]:
-                if entity["label"] == "DATE":
-                    date.append(entity["text"])
-                elif entity["label"] == "TOTAL":
-                    total = entity["text"]
-            
-            st.write("Date: ", " ".join(date))
-            st.write("Total: ", total)
-
-        st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
-
+            if method_du == "LayoutLMv3" :
+                st.title("Key Information extracted by LayoutLMv3")
+                date = []
+                total = ""
+                for entity in json_df["output"]:
+                    if entity["label"] == "DATE" or entity["label"] == "date":
+                        date.append(entity["text"])
+                    elif entity["label"] == "TOTAL" or entity["label"] == "total":
+                        total = entity["text"]
+                
+                st.write("Date: ", " ".join(date))
+                st.write("Total: ", total)
+                st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
+            elif method_du == "LayoutLMv2":
+                st.title("Key Information extracted by LayoutLMv2")
+                for i in json_df:
+                    if "TOTAL" in i['LABEL']:
+                        st.write("Total: ", i['TEXT'])
+                    elif "DATE" in i['LABEL']:
+                        st.write("Date: ", i['TEXT'])
+            else:
+                st.title("Key Information extracted by Donut")
+                st.write("Date: ", json_df["predictions"][0]["date"])
+                st.write("Total: ", json_df["predictions"][0]["total"])
 
 if __name__ == "__main__":
     main()
-
-
-
 
 # {"prompt":"you will translate following sentences into chinese\n<ENGLISH SCRIPT>\n\n###\n\n", "completion":"<CHINESE SENTENCES FROM PREVIOUS WORK>"}

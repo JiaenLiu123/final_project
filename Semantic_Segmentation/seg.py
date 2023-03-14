@@ -2,6 +2,7 @@ import torch
 import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
 from torchvision.datasets.utils import download_file_from_google_drive
+from  torch.cuda.amp import autocast
 
 import os
 import gc
@@ -116,7 +117,8 @@ def scan(preprocess_transforms,image_true=None, trained_model=None, image_size=3
 
     with torch.no_grad():
         # Out: the output of the model
-        out = trained_model(image_model)["out"].cpu()
+        with autocast():
+            out = trained_model(image_model)["out"].cpu()
 
     del image_model
     gc.collect()

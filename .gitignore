@@ -10,3 +10,4 @@ testimage
 logs
 *.log
 20230313_111731
+LayoutlMV3InferenceOutput.json
