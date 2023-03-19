@@ -6,14 +6,10 @@
 
 # Import the required libraries
 import os
-import gc
 import cv2
 import numpy as np
-import uuid
 import pathlib
 import streamlit as st
-import re
-from dateutil.parser import parse
 
 from PIL import Image, ImageDraw, ImageFont
 from layoutLM.layoutLMv3 import  get_labels, process_image
@@ -21,7 +17,6 @@ from layoutLM.layoutLMv3 import  get_labels, process_image
 from regex_script.test_all_regex import test_regex
 
 import torch
-import torchvision.transforms as torchvision_T
 from torchvision.models.segmentation import deeplabv3_resnet50, deeplabv3_mobilenet_v3_large
 from torchvision.datasets.utils import download_file_from_google_drive
 
@@ -37,7 +32,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 @st.cache(allow_output_mutation=True)
 def get_donut():
     from donut import DonutModel
-    donut = DonutModel.from_pretrained("/home/jiaenliu/final_project/20230313_111731")
+    donut = DonutModel.from_pretrained("donut_sroie")
     return donut
 
 @st.cache(allow_output_mutation=True)
@@ -129,9 +124,6 @@ def process_image(image, feature_extractor, tokenizer, model, id2label, label2co
     # forward pass
     outputs = model(**encoding)
 
-    # get the text of OCR output
-    
-
     # get predictions
     predictions = outputs.logits.argmax(-1).squeeze().tolist()
     token_boxes = encoding.bbox.squeeze().tolist()
@@ -193,7 +185,7 @@ if not DOWNLOADS_PATH.is_dir():
 
 IMAGE_SIZE = 384
 preprocess_transforms = image_preprocess_transforms()
-sizes = (600,1200)
+sizes = (960,1280)
 image = None
 final = None
 result = None
@@ -205,7 +197,7 @@ def main():
     st.title("Receipt Extractor: Semantic Segmentation using DeepLabV3-PyTorch, OCR using PyTesseract, LayoutLMv3, Donut and regex for key information extraction")
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
-    method_seg = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50"), horizontal=True)
+    method_seg = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50", "No Document Segmentation"), horizontal=True)
     method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut", "LayoutLMv2"), horizontal=True)
 
     col1, col2, col3, col4 = st.columns(4)
@@ -218,17 +210,23 @@ def main():
 
         if method_seg == "MobilenetV3-Large":
             model = load_model(model_name="mbv3")
-        else:
+        elif method_seg == "Resnet-50":
             model = load_model(model_name="r50")
+        else:
+            model = None
         
         with col1:
             st.title("Input")
             st.image(image,channels="BGR", use_column_width=True)
         
         with col2:
-            st.title("Scanned")
-            final = scan(preprocess_transforms,image, model, IMAGE_SIZE)
-            st.image(final, channels="BGR", use_column_width=True)
+            if model is not None:
+                st.title("Scanned")
+                final = scan(preprocess_transforms,image, model, IMAGE_SIZE)
+                st.image(final, channels="BGR", use_column_width=True)
+            else:
+                st.write("No Document Segmentation")
+                final = image
                         
         with col3:
             st.title("Preprocessed")
@@ -259,12 +257,10 @@ def main():
                 else:
                     donut = get_donut()
                     if torch.cuda.is_available():
-                        model.half()
+                        donut.half()
                         device = torch.device("cuda")
-                        model.to(device)
-                    else:
-                        model.encoder.to(torch.bfloat16)
-                    model.eval()
+                        donut.to(device)
+                    donut.eval()
                     json_df = donut.inference(image=scanned_image, prompt="<s_sroie_donut>")
                     text = None
                     # st.write(json_df)
@@ -292,7 +288,6 @@ def main():
                         date.append(entity["text"])
                     elif entity["label"] == "TOTAL" or entity["label"] == "total":
                         total = entity["text"]
-                
                 st.write("Date: ", " ".join(date))
                 st.write("Total: ", total)
                 st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
@@ -303,12 +298,18 @@ def main():
                         st.write("Total: ", i['TEXT'])
                     elif "DATE" in i['LABEL']:
                         st.write("Date: ", i['TEXT'])
+                st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
             else:
                 st.title("Key Information extracted by Donut")
-                st.write("Date: ", json_df["predictions"][0]["date"])
-                st.write("Total: ", json_df["predictions"][0]["total"])
+                # st.write(json_df)
+                try:
+                    st.write("Date: ", json_df["predictions"][0]["date"])
+                except:
+                    st.write("No date found")
+                try:
+                    st.write("Total: ", json_df["predictions"][0]["total"])
+                except:
+                    st.write("No total found")
 
 if __name__ == "__main__":
     main()
-
-# {"prompt":"you will translate following sentences into chinese\n<ENGLISH SCRIPT>\n\n###\n\n", "completion":"<CHINESE SENTENCES FROM PREVIOUS WORK>"}

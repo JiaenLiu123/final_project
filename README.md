@@ -1,6 +1,6 @@
 # Final project: Real-time Receipt Recognition
 
-Author: Jiaen LIU 8/1/2023
+Author: Jiaen LIU 19/03/2023
 
 Co-worker: Ivan STEPANIAN
 
@@ -8,7 +8,7 @@ Repository Link: https://github.com/JiaenLiu123/final_project
 
 ## Introduction
 
-This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app that can recognize receipt in real time and extract the information from the receipt. In this project, two CNNs are applied for semantic segmentation of receipt, tesseract for OCR and Regex and LayoutLM models family for key information extraction. All of these parts will be introduced in the following sections.
+This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app that can recognize receipts in real time and extract the information from the receipt. In this project, two CNNs are applied for semantic segmentation of receipt, Tesseract for OCR, and Regex and LayoutLM models family for key information extraction. To further enhance the performance and overcome the limitations of OCR, we also integrate the Donut model, an OCR-free Visual Document Understanding transformer. However, the Donut model has its own limitations, such as difficulty handling different date formats and potential inaccuracies in predicting years due to limited training data. All of these parts will be introduced in the following sections.
 
 ## Background
 
@@ -33,21 +33,32 @@ With the background of digital transformation, people want to digitalize existin
 
     To be honest, I think this part is very important for the next part. Because image quality is very vital for the Optical Character Recognition (OCR) and Name Entity Recognition. There is no one size fits all solution for that. Due to the time limitation, I use some traditional methods for this part, image resizing and shadows removing. Also, there are a lot of works can be done in this part such as image quality assessment and image quality improvement. I will discuss this in detail in Need to be improvede section.
 
-- Part 3: **OCR and Key Information Extraction**
+- Part 3: **OCR, Donut Model, and Key Information Extraction**
 
-    This part is the most important part of my project, and it is also the most time consuming part. There are two tasks, OCR and Key Information Extraction. The OCR part is relatively easy, I choose to use tesseract OCRv5 in my project with the configuration OCR engine modes 2 and Page segmentation modes 12. Idealy, I want to deploy a transformer-based model layoutLMv3 to extract all key information inside of one receipt such as date, total amout, address, company name, name of items, price of items and tax information. But to achieve that, the tasks are too much to be done within two months. Instead, I select date and total amount as my goals in this time. 
+    This part is the most important part of my project, and it is also the most time-consuming part. There are three tasks: OCR, Donut Model integration, and Key Information Extraction. The OCR part is relatively easy, and I choose to use Tesseract OCRv5 in my project with the configuration OCR engine modes 2 and Page segmentation modes 12. To mitigate the limitations of OCR, we also integrate the Donut model, an OCR-free VDU transformer that directly maps raw input images to desired outputs without relying on OCR. While this approach can help improve speed and accuracy while reducing dependency on OCR engines, it has its own limitations, such as difficulty handling different date formats and potential inaccuracies in predicting years due to limited training data.
+
+    Ideally, I want to deploy a transformer-based model LayoutLMv3 and Donut to extract all key information inside of one receipt such as date, total amount, address, company name, name of items, price of items, and tax information. But to achieve that, the tasks are too much to be done within two months. Instead, I select date and total amount as my goals in this time.
 
     With my co-worker, we create two approaches for this task. First approach is based on regular expression, depending on format, location, currency sign and so on. A navie weighted mechanism is applied in this approach to check every word in the OCR output whether it is the date or the total amount of the receipt. I use this regex script to label findit Task 1 dataset (500 images). The accuracy of this script is 0.72.
 
-    For the second approach, I partly managed to use a transformer-based model layoutLMv3 to extract the date and total amount from the receipt. In this approach, I use a pre-trained model from Theivaprakasham which is fine-tuned on SOIRE dataset. I try to extend his work and fine tune his model on Findit dataset. But I failed to achieve that. I put a lot work to label the findit dataset and convert it into the format that layoutLMv3 required and it is not finished yet. Also, I add a function to get key-value pair format output from the model. But this function is not stable and the length of words I get from the tokenizer is not equal to the length of non-subwords predictions. I try to solve it but I failed to do that. There is no resources from Internet about this bug. Due to that, I can not test the accuracy of this model based on it's text output. 
+    For the second approach, I partly managed to use a transformer-based model layoutLMv3 to extract the date and total amount from the receipt. In this approach, I use a pre-trained model from Theivaprakasham which is fine-tuned on SOIRE dataset. I try to extend his work and fine tune his model on Findit dataset. But I failed to achieve that. I put a lot work to label the findit dataset and convert it into the format that layoutLMv3 required and it is not finished yet. Also, I add a function to get JSON format output from the model. In order to do that, I fully restructure my code and I will explain this in later parts. But I faced a problem of inaccurate OCR output, too much misspelling and unrecognized characters in there. Due to that, I can not test the accuracy of this model based on it's text output. 
 
-    My own understanding of the model:
+    Despite the limitations of the Donut model, its integration can still provide valuable improvements to the overall performance of the system. To address the issues with handling different date formats and potential inaccuracies in predicting years, a combination of approaches, including Regex, LayoutLM, and the Donut model, can be employed to enhance the robustness and efficiency of receipt recognition and information extraction. Further fine-tuning and expanding the training data for the Donut model could help mitigate these limitations and contribute to a more accurate and versatile system.
+
+    My own understanding of LayoutLMv2 model:
 
     At the beginning, I start to use layoutLMv2 as the main algorithms for the key information extraction. This model will leverage the information from 3 aspects, token embedding, visual embedding and layout embedding. For the token embedding, there are three parts in it, word embedding and segment embedding from WordPiece and 1D positional embedding to represent the token index. Visual embedding is generated from a CNN-based visual encoder, however, since CNN can not extract the positional information, a 1D positional embedding and segment embedding are added. For layout embedding, the spatial layout information is respented by axis-aligned token bounding boxes from the OCR results. 
     ![img2](imgs/pic2.png)
     
     Then I find that this model has a new version, layoutLMv3 and then I switch to the new model. There are two main modifications in the new model. First, layoutLMv3 change the ways of layout embedding, instead of using word-level layout positions, new model uses segment-level layout positions. The authors think that words in a segmnet share the same 2D position since the words usually express the shame semantic meaning. Second, for the image embedding, inspired by ViT and ViLT, layoutLMv3 uses linear projection features of image patches to represent the  document images and then fitting these embeddings into multimodal Transformer. To be honest, I do not have a deep understanding about that, I am not familiar with Vision Transformers. But I think this will reduce the computation and region supervision is not required anymore. And from the numbers given in the paper, new model beats the old one and the parameters are much less than previous model. 
-    ![img3](imgs/pic3.png)
+    ![img3](imgs/pic3.png)  
+    The reason why LayoutLM model family will both take the token embedding and layout embedding into consideration is that they have different purpose. The CNN or ViT as a visual encoder to extract visual features from the document image. These visual features capture information related to the appearance of the text and other visual elements in the document. The visual embeddings are created by combining the extracted visual features with 1D positional embeddings and segment embeddings.  
+    So, to clarify, LayoutLMv2 uses:
+
+    - Bounding box coordinates from the OCR output to create layout embeddings.
+    - CNN-based or Transformer-based visual encoder to extract visual features from the document image, which are then used to create visual embeddings. 
+    
+    The combination of token, visual, and layout embeddings allows the model to capture the rich contextual, visual, and spatial information present in the document, which is crucial for tasks involving semi-structured documents.
 
 Flowchat of whole application:
     ![img4](imgs/flowchart.png)
@@ -70,6 +81,33 @@ Flowchat of whole application:
 3. Full information extraction
 
   As I discribed before, my goal is to create a tool that can extract all useful information from one receipt. I think if I manage to fine tune the model on my new dataset of date and total amount. I can apply this procedure to other information. I need more time to do that and I need to fully understand about this model, how it works and why it works. There are still a lot of jobs to do in this part. 
+
+
+## New things in International Master Project Part 2
+
+1. Totally restructed code of the project
+
+  In the first part of the project, I put all the code in one file. It is very hard to read and understand. So I restructed the code and put them in different files. I also add some comments to make the code more readable. Then, in order to solve the problem of the model's output, I create a new way to call the model with a more stable way. OCR and KIE are seperated for the cleanning of OCR ouput. After that, I add a new post-processing in order to get the output of the model properly.
+
+  For the new post-processing method, this method will process the output from the model inference and organizes it into a readable JSON format. Basicly speaking, the function will interates through the output data from the model and assigns them labels based on the model's predictions. Words with a non-'other' label are added to a list called 'doc_list'. Next, it groups adjacent words with the same label into spans. The output includes the text, label, and constituent words of each span, along with their respective IDs, bounding boxes, and text. Finally, the method organizes the output into a JSON string that represents a list of dictionaries, each containing an 'output' key with a list of the identified spans. In the end, the method returns the JSON string which provides a structured representation of the labeled spans, making it easy to parse and visualize the extracted information from the input document.
+  
+2. Add a new Donut model to extract date and total amount from receipt
+
+  Donut is an end-to-end, self-contained Visual Document Understanding (VDU) model designed for general understanding of document images. The architecture is composed of a Transformer-based visual encoder and textual decoder modules. Unlike other models, Donut does not rely on OCR functionality but uses a visual encoder to extract features from document images. The textual decoder then maps these features into a sequence of subword tokens to construct a desired structured format, like JSON.
+
+  The encoder can use CNN-based models or Transformer-based models, with Swin Transformer being utilized in this model due to its superior performance in document parsing. The decoder employs the BART architecture, initialized with weights from a pre-trained multi-lingual BART model. This can explain why Donut has a multi-language ability. It will take the visual embedding from encoder and prompt as input and generate a token sequence given a prompt, similar to GPT-3.    
+  
+  During training, the model is trained to read all texts in an image in reading order, minimizing cross-entropy loss of next token prediction. In other words, in the training phrase, the model's job is very similar to OCR. Fine-tuning teaches the model to understand document images by interpreting downstream tasks as JSON prediction problems. The decoder generates a token sequence convertible into a JSON that represents the desired output information, allowing the model to handle various tasks such as document classification, named entity recognition, and more.
+
+  ![img5](imgs/pic4.png)
+  Due to the time limit of this project, I only fine-tuned the model on SROIE dataset of date and total amount. I chose 400 images as training set and 100 images each for test set and validation set. The model is trained for 30 epoches with learning rate 3e-5. For the ground truth, only the date and total amount are provided which means Donut cannot detect the location of text. This problem can be solved by providing such information in the training phrase. The result of total amount is good, but the result of date is not so good compared with the total. By analysing the dataset, I found that the data varity of date is not good enough, all the training set is in 2018 and that explains why the model cannot predict the year correctly. Also, when the format of date is not so similar to the format in training set, the model will fail to predict the date. So, I think if I can find a better dataset with more varity of date, the model will perform better. Also, I think if I can fine-tune the model on more tasks, the model will perform better. I think this model is very promising and I will continue to work on it in the future.
+
+  Compare with the result of LayoutLM family, the text result of Donut is much better. But as mentioned above, the model cannot detect the location of text. So, I think if I can combine the result of Donut and LayoutLM, the result will be better. I will try to do that in the future. Also, I will try to add more data to future fine-tuning to make the model more robust and capable to extract more information from the receipts.
+
+  3. Reorganized web interface
+
+
+
 
 ## Installation
 
@@ -114,6 +152,16 @@ wget https://github.com/tesseract-ocr/tessdata/blob/main/fra.traineddata
 # Be careful to make sure the fra.traineddata and eng.traineddata are correct
 
 # After successfully install all dependencies, you can just run following command to use the streamlit web application. For the first run, it takes some time to download models from Internet.
+
+# Updated in Part 2 of the project
+
+# In order to use fine-tuned Donut model, you need to download it from the huggingface website.
+# Make sure you have installed git lfs check the following link to install it
+https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage?platform=linux
+
+# download the model
+git clone https://huggingface.co/JiaenLiu/donut_sroie
+
 streamlit run cleaned_app.py
 
 ```
@@ -122,22 +170,21 @@ streamlit run cleaned_app.py
 This project is based on the following projects:  
 https://learnopencv.com/deep-learning-based-document-segmentation-using-semantic-segmentation-deeplabv3-on-custom-dataset/  
 https://huggingface.co/spaces/Theivaprakasham/layoutlmv2_sroie  
+https://github.com/clovaai/donut  
+https://towardsdatascience.com/ocr-free-document-understanding-with-donut-1acfbdf099be  
 
 Datasets:
 
 Findit:
 
-https://drive.google.com/file/d/1fPOTGQS_wX0xCABrmk87OnWCr0rEE-Cx/view?usp=share_link
-
-https://drive.google.com/file/d/1Zog-6cY35vuJcJ24I6ZCKR57zEXqyrNB/view?usp=share_link
-
-https://drive.google.com/file/d/1GzCYqEqOTk2YRLUQemyOBV0TURB2RyPD/view?usp=share_link
+https://drive.google.com/file/d/1fPOTGQS_wX0xCABrmk87OnWCr0rEE-Cx/view?usp=share_link  
+https://drive.google.com/file/d/1Zog-6cY35vuJcJ24I6ZCKR57zEXqyrNB/view?usp=share_link  
+https://drive.google.com/file/d/1GzCYqEqOTk2YRLUQemyOBV0TURB2RyPD/view?usp=share_link  
 
 SORIE:
 
-https://drive.google.com/drive/folders/1xvZ6jpZQfpMHJCUD0L_5KHQy0T9QAepx?usp=share_link
-
-https://drive.google.com/drive/folders/11lDpn-rO3AmmyIMCYxYizZnP6BPgETsy?usp=share_link
+https://drive.google.com/drive/folders/1xvZ6jpZQfpMHJCUD0L_5KHQy0T9QAepx?usp=share_link  
+https://drive.google.com/drive/folders/11lDpn-rO3AmmyIMCYxYizZnP6BPgETsy?usp=share_link  
 
 Important papers:
 
@@ -147,8 +194,12 @@ Feng, Hao, et al. "Doctr: Document image transformer for geometric unwarping and
 
 Huang, Yupan, et al. "LayoutLMv3: Pre-training for Document AI with Unified Text and Image Masking." *arXiv preprint arXiv:2204.08387* (2022).
 
+Xu, Yang, et al. "Layoutlmv2: Multi-modal pre-training for visually-rich document understanding." arXiv preprint arXiv:2012.14740 (2020).
+
 Artaud, Chloé, et al. "Receipt Dataset for Fraud Detection." *First International Workshop on Computational Document Forensics*. 2017.
 
 Howard, Andrew, et al. "Searching for mobilenetv3." *Proceedings of the IEEE/CVF international conference on computer vision*. 2019.
 
 Ma, Ke, et al. "Docunet: Document image unwarping via a stacked u-net." *Proceedings of the IEEE conference on computer vision and pattern recognition*. 2018.
+
+Kim, Geewook, et al. "Ocr-free document understanding transformer." Computer Vision–ECCV 2022: 17th European Conference, Tel Aviv, Israel, October 23–27, 2022, Proceedings, Part XXVIII. Cham: Springer Nature Switzerland, 2022.
