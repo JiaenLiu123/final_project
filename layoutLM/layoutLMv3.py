@@ -7,15 +7,8 @@ import logging
 import torch
 import json
 import os
-import cv2
 import uuid
-from PIL import Image, ImageDraw, ImageFont
 import numpy as np
-import re
-import pandas as pd
-import pytesseract
-
-from regex_script.test_all_regex import test_regex
 
 # arr = []
 # batch_size = 32

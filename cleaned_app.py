@@ -37,6 +37,7 @@ def get_donut():
 
 @st.cache(allow_output_mutation=True)
 def load_model(num_classes=2, model_name="mbv3", device= torch.device("cuda" if torch.cuda.is_available() else "cpu")):
+    # Load the model
     if model_name == "mbv3":
         model = deeplabv3_mobilenet_v3_large(num_classes=num_classes, aux_loss=True)
         checkpoint_path = os.path.join(os.getcwd(), "model_mbv3_iou_mix_2C_aux_e3_pretrain.pth")

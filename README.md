@@ -1,6 +1,8 @@
 # Final project: Real-time Receipt Recognition
 
-Author: Jiaen LIU 19/03/2023
+Author: Jiaen LIU  
+Part 1: 08/01/2023   
+Updated Part 2: 20/03/2023
 
 Co-worker: Ivan STEPANIAN
 
@@ -8,7 +10,7 @@ Repository Link: https://github.com/JiaenLiu123/final_project
 
 ## Introduction
 
-This repository contains the final project for JiaenLiu's Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app that can recognize receipts in real time and extract the information from the receipt. In this project, two CNNs are applied for semantic segmentation of receipt, Tesseract for OCR, and Regex and LayoutLM models family for key information extraction. To further enhance the performance and overcome the limitations of OCR, we also integrate the Donut model, an OCR-free Visual Document Understanding transformer. However, the Donut model has its own limitations, such as difficulty handling different date formats and potential inaccuracies in predicting years due to limited training data. All of these parts will be introduced in the following sections.
+This repository features JiaenLiu's final project for their Bachelor's degree in Computer Science at the Beijing Institute of Petrochemical Technology and International Master Project for EFREI Paris. The project is a web app designed to recognize receipts in real-time and extract essential information from them. Utilizing two CNNs for semantic segmentation of receipts, Tesseract for OCR, and Regex and LayoutLM model families for key information extraction, the project aims to create a robust and accurate system. To further enhance performance and address the limitations of OCR, the Donut model, an OCR-free Visual Document Understanding transformer, is integrated into the system. However, the Donut model presents its own challenges, such as handling different date formats and potential inaccuracies in predicting years due to limited training data. These components and their respective challenges are discussed in detail in the following sections.
 
 ## Background
 
@@ -39,7 +41,7 @@ With the background of digital transformation, people want to digitalize existin
 
     Ideally, I want to deploy a transformer-based model LayoutLMv3 and Donut to extract all key information inside of one receipt such as date, total amount, address, company name, name of items, price of items, and tax information. But to achieve that, the tasks are too much to be done within two months. Instead, I select date and total amount as my goals in this time.
 
-    With my co-worker, we create two approaches for this task. First approach is based on regular expression, depending on format, location, currency sign and so on. A navie weighted mechanism is applied in this approach to check every word in the OCR output whether it is the date or the total amount of the receipt. I use this regex script to label findit Task 1 dataset (500 images). The accuracy of this script is 0.72.
+    With my co-worker, we create three approaches for this task. First approach is based on regular expression, depending on format, location, currency sign and so on. A navie weighted mechanism is applied in this approach to check every word in the OCR output whether it is the date or the total amount of the receipt. I use this regex script to label findit Task 1 dataset (500 images). The accuracy of this script is 0.72.
 
     For the second approach, I partly managed to use a transformer-based model layoutLMv3 to extract the date and total amount from the receipt. In this approach, I use a pre-trained model from Theivaprakasham which is fine-tuned on SOIRE dataset. I try to extend his work and fine tune his model on Findit dataset. But I failed to achieve that. I put a lot work to label the findit dataset and convert it into the format that layoutLMv3 required and it is not finished yet. Also, I add a function to get JSON format output from the model. In order to do that, I fully restructure my code and I will explain this in later parts. But I faced a problem of inaccurate OCR output, too much misspelling and unrecognized characters in there. Due to that, I can not test the accuracy of this model based on it's text output. 
 
@@ -63,26 +65,6 @@ With the background of digital transformation, people want to digitalize existin
 Flowchat of whole application:
     ![img4](imgs/flowchart.png)
 
-
-
-
-
-## Need to be improved
-1. The improvement of image preprocessing (Unwarp the image)
-
-  As I mentioned before, CNNs can detect and segment the receipt when the receipt is twisted and unclosed. But when they cannot unwarp the image back to flat. This can be done by DocUNet and DocTr. These models are desigened to unwarp the image back to its original state. I want to apply these methods in my project. But the cost of computation is too much to accept it. In future, I want to intergrate image unwarping into this project with a efficient way.
-
-![img1](imgs/pic1.png)
-
-2. Image Quality Assessment & Image Quality Improvement
-
-  Image Quality is very important for the OCR and KIE. So I think if I can improve the image quality of input images, the accuracy of the regex and layoutLM will be improved a lot due to a better OCR output. Also, this can be one important factor of our model. If the input quality is bad and model does not extract the information from receipt, that is OK. But if the input quality is good and model also does not extract the information, that is unacceptable. But the image quality is a very subject matrix, that's why I need a stable IQA algorithm to do it instead of doing it manually. I hope I can add this in future to make the project be more accurate and convincing.
-
-3. Full information extraction
-
-  As I discribed before, my goal is to create a tool that can extract all useful information from one receipt. I think if I manage to fine tune the model on my new dataset of date and total amount. I can apply this procedure to other information. I need more time to do that and I need to fully understand about this model, how it works and why it works. There are still a lot of jobs to do in this part. 
-
-
 ## New things in International Master Project Part 2
 
 1. Totally restructed code of the project
@@ -100,16 +82,33 @@ Flowchat of whole application:
   During training, the model is trained to read all texts in an image in reading order, minimizing cross-entropy loss of next token prediction. In other words, in the training phrase, the model's job is very similar to OCR. Fine-tuning teaches the model to understand document images by interpreting downstream tasks as JSON prediction problems. The decoder generates a token sequence convertible into a JSON that represents the desired output information, allowing the model to handle various tasks such as document classification, named entity recognition, and more.
 
   ![img5](imgs/pic4.png)
-  Due to the time limit of this project, I only fine-tuned the model on SROIE dataset of date and total amount. I chose 400 images as training set and 100 images each for test set and validation set. The model is trained for 30 epoches with learning rate 3e-5. For the ground truth, only the date and total amount are provided which means Donut cannot detect the location of text. This problem can be solved by providing such information in the training phrase. The result of total amount is good, but the result of date is not so good compared with the total. By analysing the dataset, I found that the data varity of date is not good enough, all the training set is in 2018 and that explains why the model cannot predict the year correctly. Also, when the format of date is not so similar to the format in training set, the model will fail to predict the date. So, I think if I can find a better dataset with more varity of date, the model will perform better. Also, I think if I can fine-tune the model on more tasks, the model will perform better. I think this model is very promising and I will continue to work on it in the future.
+  Due to the time constraints of this project, I only fine-tuned the model on the SROIE dataset for date and total amount. I chose 400 images for the training set and 100 images each for the test set and validation set. The model was trained for 30 epochs with a learning rate of 3e-5. For the ground truth, only the date and total amount were provided, which means Donut cannot detect the location of the text. This problem can be solved by providing such information during the training phase. The result for the total amount is good, but the date's result is not as satisfactory compared to the total. Upon analyzing the dataset, I found that the date's data variety is not good enough; all the training set is from 2018, which explains why the model cannot predict the year correctly. Also, when the date format differs significantly from the training set, the model fails to predict the date. I believe that if I can find a better dataset with a more diverse range of dates, the model will perform better. Additionally, fine-tuning the model for more tasks could also improve performance. I find this model very promising and will continue to work on it in the future.
 
-  Compare with the result of LayoutLM family, the text result of Donut is much better. But as mentioned above, the model cannot detect the location of text. So, I think if I can combine the result of Donut and LayoutLM, the result will be better. I will try to do that in the future. Also, I will try to add more data to future fine-tuning to make the model more robust and capable to extract more information from the receipts.
+  Compared to the results of the LayoutLM family, the text output of Donut is much better. However, as mentioned earlier, the model cannot detect the location of the text. So, I think combining the results of Donut and LayoutLM could yield better outcomes. I will try to do that in the future. Also, I plan to add more data for future fine-tuning to make the model more robust and capable of extracting more information from receipts.
 
   3. Reorganized web interface
 
+  In part 2, I optimise the web layout and add more options for users to choose. Which allows users to compare the performance between different models and processing methods. 
 
+## Future Work
 
+1. The improvement of image preprocessing (Unwarp the image)
 
-## Installation
+  As I mentioned before, CNNs can detect and segment the receipt when the receipt is twisted and unclosed. But when they cannot unwarp the image back to flat. This can be done by DocUNet and DocTr. These models are desigened to unwarp the image back to its original state. I want to apply these methods in my project. But the cost of computation is too much to accept it. In future, I want to intergrate image unwarping into this project with a efficient way.
+
+![img1](imgs/pic1.png)
+
+2. Image Quality Assessment & Image Quality Improvement
+
+  Image Quality is very important for the OCR and KIE. So I think if I can improve the image quality of input images, the accuracy of the regex and layoutLM will be improved a lot due to a better OCR output. Also, this can be one important factor of our model. If the input quality is bad and model does not extract the information from receipt, that is OK. But if the input quality is good and model also does not extract the information, that is unacceptable. But the image quality is a very subject matrix, that's why I need a stable IQA algorithm to do it instead of doing it manually. I hope I can add this in future to make the project be more accurate and convincing.
+
+3. Full information extraction
+
+  As I discribed before, my goal is to create a tool that can extract all useful information from one receipt. I think if I manage to fine tune the model on my new dataset of date and total amount. I can apply this procedure to other information. I need more time to do that and I need to fully understand about this model, how it works and why it works. There are still a lot of jobs to do in this part. 
+
+  In the future, our work will focus on enhancing the performance and capabilities of our models. We aim to combine the strengths of the Donut model and LayoutLM family to achieve more accurate text recognition and location detection. To accomplish this, we will seek better and more diverse datasets for fine-tuning, particularly with a wider range of dates and formats. Additionally, we plan to expand the tasks for which the model is fine-tuned, enabling it to extract a broader set of information from receipts and other documents. Finally, we will continue refining the web interface to offer users a more seamless experience, allowing them to easily compare and evaluate the performance of various models and processing methods. By addressing these areas, we hope to develop a more robust and versatile solution for document understanding and information extraction.
+
+## Installation & Usage Example
 
 Idealy, you need a machine in Ubuntu 18.04 to run this project. There is no GPU requirement. You can also run it in Windows by Windows Subsystem For Linux, that is due to detectron2 is not officially supported on Windows. You need to install tesseract OCR engine manually. The following packages are required to run this project:
 
@@ -141,7 +140,7 @@ sudo add-apt-repository ppa:alex-p/tesseract-ocr-devel
 sudo apt install -y tesseract-ocr
 sudo apt update 
 # Check the version is correct (Should be the latest version)
-tesseract --version、
+tesseract --version
 
 # Add the language data for Tesseract 5
 # Use the following command to check the available languages and path to the language data
@@ -162,8 +161,11 @@ https://docs.github.com/en/repositories/working-with-files/managing-large-files/
 # download the model
 git clone https://huggingface.co/JiaenLiu/donut_sroie
 
+# run the streamlit web application
 streamlit run cleaned_app.py
 
+# Run to test the layoutLMv3 model
+python test_handler.py --image_path {YOUR_IMAGE_PATH}
 ```
 
 ## Thanks

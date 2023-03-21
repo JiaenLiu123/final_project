@@ -2,18 +2,14 @@
 # This file is used to do the heavy testing of the model.
 
 from .utils import load_model,load_processor,normalize_box,compare_boxes,adjacent
-from .annotate_image import get_flattened_output,annotate_image
+from .annotate_image_batch import get_flattened_output,annotate_image
 from PIL import Image,ImageDraw, ImageFont
 import logging
 import torch
 import json
 import os
-import cv2
 import uuid
-from PIL import Image, ImageDraw, ImageFont
 import numpy as np
-import re
-import pandas as pd
 import pytesseract
 
 # arr = []
