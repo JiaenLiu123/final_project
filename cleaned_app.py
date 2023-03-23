@@ -274,8 +274,14 @@ def main():
             st.write(text)
             st.title("Key Information extracted by regex")
             date, total = test_regex(text, True)
-            st.write("Date: ", date[1].strftime("%d/%m/%Y %H:%M:%S"), f"({round(date[0] * 100)}% sure)")
-            st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
+            try:
+                st.write("Date: ", date[1].strftime("%d/%m/%Y %H:%M:%S"), f"({round(date[0] * 100)}% sure)")
+            except:
+                st.write("Error in date extraction")
+            try:
+                st.write("Total: ", total[1], f"({round(total[0] * 100)}% sure)")
+            except:
+                st.write("Error in total extraction")
         
         if json_df is not None:
             # print(json_df)
