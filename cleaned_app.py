@@ -199,7 +199,7 @@ def main():
     uploaded_file = st.file_uploader("Choose a file", type=["png", "jpg", "jpeg"])
 
     method_seg = st.radio("Select Document Segmentation Model:", ("MobilenetV3-Large", "Resnet-50", "No Document Segmentation"), horizontal=True)
-    method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut", "LayoutLMv2"), horizontal=True)
+    method_du = st.radio("Select Document Understanding Model:", ("LayoutLMv3", "Donut", "LayoutLMv2","All"), horizontal=True)
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -255,7 +255,7 @@ def main():
                     annotated_img, text, json_df = process_image(scanned_image, feature_extractor,tokenizer, layoutLMv2, id2label, label2color)
                     st.image(annotated_img, channels="BGR", use_column_width=True)
                     # st.write("No annotated image available for LayoutLMv2")
-                else:
+                elif method_du == "Donut":
                     donut = get_donut()
                     if torch.cuda.is_available():
                         donut.half()
@@ -266,10 +266,66 @@ def main():
                     text = None
                     # st.write(json_df)
                     st.write("No annotated image available for Donut")
+                elif method_du=="All":
+                    st.title("Annotated Image for LayoutLMv3")
+                    inference_bath = prepare_batch_for_inference([scanned_image])
+                    context = {"model_dir": "Theivaprakasham/layoutlmv3-finetuned-sroie"}
+                    json_df_layout3, annotated_img_1 = handle(inference_bath, context)
+                    text_1 = inference_bath["text"][0]
+                    st.image(annotated_img_1, channels="BGR", use_column_width=True)
+                    # st.image(annotated_img, channels="BGR", use_column_width=True)
+                    st.title("Annotated Image for LayoutLMv2")
+                    tokenizer, feature_extractor, layoutLMv2 = get_layoutlmv2()
+                    id2label, label2color = get_labels()
+                    annotated_img_2, text_2, json_df_layout2 = process_image(scanned_image, feature_extractor,tokenizer, layoutLMv2, id2label, label2color)
+                    st.image(annotated_img_2, channels="BGR", use_column_width=True)
+                    # st.write("No annotated image available for LayoutLMv2")
+                    # st.title("Annotated Image")
+                    donut = get_donut()
+                    if torch.cuda.is_available():
+                        donut.half()
+                        device = torch.device("cuda")
+                        donut.to(device)
+                    donut.eval()
+                    json_df_donut = donut.inference(image=scanned_image, prompt="<s_sroie_donut>")
+                    text = text_1
+                    json_df = None
+                    # st.write(json_df)
+                    st.write("No annotated image available for Donut")
+
+        if method_du == "All":
+            st.title("Key Information extracted by LayoutLMv3")
+            date = []
+            total = ""
+            for entity in json_df_layout3["output"]:
+                if entity["label"] == "DATE" or entity["label"] == "date":
+                    date.append(entity["text"])
+                elif entity["label"] == "TOTAL" or entity["label"] == "total":
+                    total = entity["text"]
+            st.write("Date: ", " ".join(date))
+            st.write("Total: ", total)
+            st.markdown(get_image_download_link(annotated_img_1, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
+            st.title("Key Information extracted by LayoutLMv2")
+            for i in json_df_layout2:
+                if "TOTAL" in i['LABEL']:
+                    st.write("Total: ", i['TEXT'])
+                elif "DATE" in i['LABEL']:
+                    st.write("Date: ", i['TEXT'])
+            st.markdown(get_image_download_link(annotated_img_2, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
+            st.title("Key Information extracted by Donut")
+            # st.write(json_df)
+            try:
+                st.write("Date: ", json_df_donut["predictions"][0]["date"])
+            except:
+                st.write("No date found")
+            try:
+                st.write("Total: ", json_df_donut["predictions"][0]["total"])
+            except:
+                st.write("No total found")
                 
         
         # Display the output
-        if text is not None:
+        if text is not None :
             st.title("Extracted Text")
             st.write(text)
             st.title("Key Information extracted by regex")
@@ -283,7 +339,7 @@ def main():
             except:
                 st.write("Error in total extraction")
         
-        if json_df is not None:
+        if json_df is not None and method_du != "All":
             # print(json_df)
             # st.write(json_df)
             if method_du == "LayoutLMv3" :
@@ -306,7 +362,7 @@ def main():
                     elif "DATE" in i['LABEL']:
                         st.write("Date: ", i['TEXT'])
                 st.markdown(get_image_download_link(annotated_img, "output.png", "Download " + "Annotated image"), unsafe_allow_html=True)
-            else:
+            elif method_du == "Donut":
                 st.title("Key Information extracted by Donut")
                 # st.write(json_df)
                 try:
